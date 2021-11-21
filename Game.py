@@ -30,6 +30,8 @@ class Game:
             self.turn = "A"
             self.idle = "B"
 
+        log.info(f"it's {self.turn}'s turn now, {self.idle} is idle.")
+
     def main_loop(self):
         self.domain.influence()
         self.handle_events()
@@ -38,6 +40,8 @@ class Game:
 
     def handle_events(self):
         """handle all game events"""
+
+        
         
         while len(self.events) != 0:
             e = self.events.popleft()
@@ -52,27 +56,25 @@ class Game:
             # handle auto attack input
             if e.type == Event.ACTION_AUTO:
                 active_chara.invoke_auto()
-                self.swap_turn()
+                
 
             # handle charge attack input 
             elif e.type == Event.ACTION_CHARGE:
                 active_chara.invoke_charge()
-                self.swap_turn()
 
             # handle elemental skill input
             elif e.type == Event.ACTION_SKILL:
                 active_chara.invoke_skill()
-                self.swap_turn()
 
             # handle elemental burst input
             elif e.type == Event.ACTION_BURST:
                 active_chara.invoke_burst()
-                self.swap_turn()
 
             # handle character switch input 
             # (change focused character)
             elif e.type == Event.ACTION_SWITCH:
                 party['focused'] = e.val
+                log.info(f"I {party['focused']} from {self.turn} take the field")
                 
                 # emit focus and blur events for all characters in party.
                 for i in range(len(party['charas'])):
@@ -82,7 +84,6 @@ class Game:
                         self.events.append(Event(Event.CHARA_BLUR, i))
 
 
-
             elif e.type == Event.CHARA_FOCUS:
                 focus_target = e.val
                 party['charas'][focus_target].focus()
@@ -90,7 +91,11 @@ class Game:
             elif e.type == Event.CHARA_BLUR:
                 blur_target = e.val
                 party['charas'][blur_target].blur()
-
+        
+        # all events are finished. swap party turns
+        log.debug('-----------------------------')
+        
+        self.swap_turn()
 
 
 if __name__ == "__main__":
@@ -102,8 +107,9 @@ if __name__ == "__main__":
     game.domain.add_party("B", "kaeya", "kaeya")
     
     # handle input.
-    game.events.append(Event(Event.ACTION_AUTO))
-
-
     game.events.append(Event(Event.ACTION_SWITCH, 1))
+    game.events.append(Event(Event.ACTION_AUTO))
+    game.main_loop().__next__()
+    game.events.append(Event(Event.ACTION_SWITCH, 1))
+    game.events.append(Event(Event.ACTION_AUTO))
     game.main_loop().__next__()

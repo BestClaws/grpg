@@ -19,9 +19,14 @@ class GrpgCharacter(GrpgCharacterBase):
         self.infer_base_stats()
 
         # prepare before entering domain
-        self.reset_hp()
+        self.prepare()
         
         self.wep = {"BASE_ATK": 12}
+
+
+    def prepare(self):
+        self.reset_hp()
+        log.info(f"I {self.get_position()} from {self.party_name} have {self.stats['HP']} remaining out of {self.stats['MAX_HP']}")
 
 
     def infer_base_stats(self):
@@ -29,19 +34,21 @@ class GrpgCharacter(GrpgCharacterBase):
         if not self.level:
             raise Exception("set a character level first!")
 
-        self.BASE_ATK = get_stat(self.stats["base_atk_table"], self.level)
-        self.MAX_HP = get_stat(self.stats["base_hp_table"], self.level)
+        self.stats['BASE_ATK'] = get_stat(self.stats["base_atk_table"], self.level)
+        self.stats['MAX_HP'] = get_stat(self.stats["base_hp_table"], self.level)
 
    
 
     def reset_hp(self):
         """restore character's full hp"""
-        self.hp = self.MAX_HP
+        self.stats['HP'] = self.stats['MAX_HP']
+
+
+ 
 
 
     def buff(self, buffs):
-        log.info(f'buffing with : {buffs}')
-
+        self.stats
 
 
     def get_position(self):
@@ -51,10 +58,13 @@ class GrpgCharacter(GrpgCharacterBase):
 
 
     def focus(self):
-        log.info(f'I {self.get_position()} became active.')
+        log.info(f'I {self.get_position()} from {self.party_name} became active.')
 
 
 
     def blur(self):
-        log.info(f'I {self.get_position()} switched off-field.')
+        log.info(f'I {self.get_position()} from {self.party_name} switched off-field.')
         pass
+
+    def get_hp(self):
+        return self.stats['HP']

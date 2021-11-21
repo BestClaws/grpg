@@ -4,13 +4,26 @@
 [INFO][Domain] picked Hidden Palace of Zhou Formula domain
 [INFO][Domain] domain buffs: {'ATK': 1.1}
 [INFO][Domain] {'ATK': 1.1}
+[INFO][GrpgCharacter] I None from A have 793 remaining out of 793
 [INFO][Domain] {'ATK': 1.1}
+[INFO][GrpgCharacter] I None from A have 793 remaining out of 793
 [INFO][Domain] {'ATK': 1.1}
+[INFO][GrpgCharacter] I None from B have 793 remaining out of 793
 [INFO][Domain] {'ATK': 1.1}
-[INFO][GrpgCharacter] buffing with : {'ATK': 1.1}
-[INFO][GrpgCharacter] buffing with : {'ATK': 1.1}
-[INFO][GrpgCharacter] buffing with : {'ATK': 1.1}
-[INFO][GrpgCharacter] buffing with : {'ATK': 1.1}
-[INFO][Kaeya] invoking auto attack
-[INFO][GrpgCharacter] I 0 switched off-field.
-[INFO][GrpgCharacter] I 1 became active.
+[INFO][GrpgCharacter] I None from B have 793 remaining out of 793
+[INFO][Game] I 1 from A take the field
+[INFO][Kaeya] I 1 from A am  invoking auto attack
+[INFO][Kaeya] gaah I 0 from B got hit
+[INFO][Kaeya] after taking a bonk of dmg 15.5, i have 777.5 remaining out of 793
+[INFO][GrpgCharacter] I 0 from A switched off-field.
+[INFO][GrpgCharacter] I 1 from A became active.
+[DEBUG][Game] -----------------------------
+[INFO][Game] it's B's turn now, A is idle.
+[INFO][Game] I 1 from B take the field
+[INFO][Kaeya] I 1 from B am  invoking auto attack
+[INFO][Kaeya] gaah I 0 from A got hit
+[INFO][Kaeya] after taking a bonk of dmg 15.5, i have 777.5 remaining out of 793
+[INFO][GrpgCharacter] I 0 from B switched off-field.
+[INFO][GrpgCharacter] I 1 from B became active.
+[DEBUG][Game] -----------------------------
+[INFO][Game] it's A's turn now, B is idle.

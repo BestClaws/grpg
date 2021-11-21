@@ -17,3 +17,8 @@ def get_stat(stats_table, level):
         stat = stats_table[low] + (step * (level - low))
 
     return stat
+
+def get_opponents(party_name):
+    if party_name == "A":
+        return "B"
+    else: return "A"
