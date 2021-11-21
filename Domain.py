@@ -10,7 +10,8 @@ class Domain:
     Influences the battle by buffing/debuffing characters.
     """
 
-    def __init__(self, name="Zhou"):
+    def __init__(self, game, name="Zhou"):
+        self.game = game
 
         # load all domain's data
         with open('domains.json') as f:

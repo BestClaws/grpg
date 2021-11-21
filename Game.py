@@ -38,46 +38,60 @@ class Game:
 
     def handle_events(self):
         """handle all game events"""
+        
         while len(self.events) != 0:
             e = self.events.popleft()
 
-            active_chara: GrpgCharacter = self.domain.parties[self.turn]['charas'][0]
+            party = self.domain.parties[self.turn]
+            active_chara: GrpgCharacter = party['charas'][party['focused']]
                 
 
+
+            ## HANDLE INPUTS
+            
+            # handle auto attack input
             if e.type == Event.ACTION_AUTO:
                 active_chara.invoke_auto()
                 self.swap_turn()
 
+            # handle charge attack input 
             elif e.type == Event.ACTION_CHARGE:
                 active_chara.invoke_charge()
                 self.swap_turn()
 
-
+            # handle elemental skill input
             elif e.type == Event.ACTION_SKILL:
                 active_chara.invoke_skill()
                 self.swap_turn()
 
+            # handle elemental burst input
             elif e.type == Event.ACTION_BURST:
                 active_chara.invoke_burst()
                 self.swap_turn()
 
+            # handle character switch input 
+            # (change focused character)
             elif e.type == Event.ACTION_SWITCH:
-                switch_target = e.val
-                charas = self.domain.parties[self.turn]['charas']
+                party['focused'] = e.val
                 
-                for i in range(len(charas)):
-                    if i == switch_target:
+                # emit focus and blur events for all characters in party.
+                for i in range(len(party['charas'])):
+                    if i == party['focused']:
                         self.events.append(Event(Event.CHARA_FOCUS, i))
                     else:
                         self.events.append(Event(Event.CHARA_BLUR, i))
 
+
+
             elif e.type == Event.CHARA_FOCUS:
-                active_chara.focus()
+                focus_target = e.val
+                party['charas'][focus_target].focus()
+
             elif e.type == Event.CHARA_BLUR:
-                active_chara.blur()
+                blur_target = e.val
+                party['charas'][blur_target].blur()
 
 
-g = None
 
 if __name__ == "__main__":
     
@@ -93,5 +107,3 @@ if __name__ == "__main__":
 
     game.events.append(Event(Event.ACTION_SWITCH, 1))
     game.main_loop().__next__()
-
-    g = game

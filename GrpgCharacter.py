@@ -1,4 +1,3 @@
-from Domain import Domain
 from util import get_stat
 from logger import log
 
@@ -7,14 +6,14 @@ from GrpgCharacterBase import GrpgCharacterBase
 
 class GrpgCharacter(GrpgCharacterBase):
 
-    def __init__(self,  domain, party_name, level):
+    def __init__(self, domain, party_name, level):
         super().__init__()
 
         # character's volatile stats and game stats.
         self.level = level
         self.alive = True
-        self.domain: Domain = domain
         self.party_name = party_name
+        self.domain = domain
 
         # calculate all stats
         self.infer_base_stats()
@@ -46,8 +45,16 @@ class GrpgCharacter(GrpgCharacterBase):
 
 
     def get_position(self):
-        for i, chara in self.domain.parties[self.party_name]['charas']:
+        for i, chara in enumerate(self.domain.parties[self.party_name]['charas']):
             if chara is self:
                 return i
 
 
+    def focus(self):
+        log.info(f'I {self.get_position()} became active.')
+
+
+
+    def blur(self):
+        log.info(f'I {self.get_position()} switched off-field.')
+        pass

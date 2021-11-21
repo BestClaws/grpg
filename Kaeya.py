@@ -3,9 +3,10 @@ from GrpgCharacter import GrpgCharacter
 
 class Kaeya(GrpgCharacter):
     
-    def __init__(self,  domain, level=1):
+    def __init__(self, *, domain, party_name, level=1):
         
         self.stats = {}
+        
 
         # dmg output multiplies
         self.stats['dmg_xer'] = {
@@ -53,7 +54,7 @@ class Kaeya(GrpgCharacter):
         self.crit_rate = 0.05
         self.crit_dmg = 0.5
 
-        super().__init__(domain, level)
+        super().__init__(domain, party_name, level)
 
         
         self.infer_base_stats()
@@ -77,6 +78,7 @@ class Kaeya(GrpgCharacter):
         # single target
         # target = self.arena.enemies[0]
         # target.hit(final_dmg_out)
+        
 
     def invoke_charge(self):
         pass
@@ -87,10 +89,5 @@ class Kaeya(GrpgCharacter):
     def invoke_burst(self):
         pass
 
-    def focus(self):
-        log.info(f'I {self} became active.')
-        pass
+  
 
-    def blur(self):
-        log.info(f'I {self} switched off-field.')
-        pass

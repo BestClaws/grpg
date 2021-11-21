@@ -12,3 +12,5 @@
 [INFO][GrpgCharacter] buffing with : {'ATK': 1.1}
 [INFO][GrpgCharacter] buffing with : {'ATK': 1.1}
 [INFO][Kaeya] invoking auto attack
+[INFO][GrpgCharacter] I 0 switched off-field.
+[INFO][GrpgCharacter] I 1 became active.
