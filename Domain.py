@@ -1,5 +1,5 @@
 import json
-import logging as log
+import logging
 
 from Kaeya import Kaeya
 
@@ -13,24 +13,26 @@ class Domain:
     def __init__(self, game, name="Zhou"):
         self.game = game
 
-        # load all domain's data
-        with open('domains.json') as f:
+        # load all domains' data
+        with open('assets/domains.json') as f:
             self.data = json.load(f)[name]
 
 
         self.buffs = self.data['buffs']
 
-        log.info(f"picked {self.data['fullname']} domain")
-        log.info(f'domain buffs: {self.buffs}')
+        logging.info(f"picked {self.data['fullname']} domain")
+        logging.info(f'domain buffs: {self.buffs}')
 
+
+        # stores party charas and party meta data.
         self.parties = {
             "A": {
                 "charas": [],
-                "focused": 0
+                "onfield": 0
             },
             "B": {
                 "charas": [],
-                "focused": 0
+                "onfield": 0
             }
         }
 
@@ -47,7 +49,7 @@ class Domain:
 
         for chara in charas:
             # validate team member
-            log.info(self.buffs)
+            logging.info(self.buffs)
             chara = Kaeya(domain=self, party_name=party_name)
             self.parties[party_name]["charas"].append(chara)
 
@@ -57,13 +59,15 @@ class Domain:
         Applies all buffs/debuffs to all party members
         Influences in other ways (hp bleed etc., Not yet implemented)
         """
-
+        logging.info('influencing')
         charasA = self.parties["A"]["charas"]
         charasB = self.parties["B"]["charas"]
 
         for chara in charasA + charasB:
-            chara.buff(self.buffs)
+            chara.apply_buffs(self.buffs)
 
 
+
+# test code only.
 if __name__ == "__main__":
     d = Domain("Zhou")

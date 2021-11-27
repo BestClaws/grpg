@@ -3,7 +3,7 @@
         "fullname": "Hidden Palace of Zhou Formula",
         "description": "favourite but also cursed domain.",
         "buffs": {
-            "ATK": 1.1
+            "DMG": 0.99
         }
     }
 }

@@ -1,4 +1,5 @@
-import logging as log
+import logging
+
 from util import get_opponents
 from GrpgCharacter import GrpgCharacter
 
@@ -6,7 +7,10 @@ class Kaeya(GrpgCharacter):
     
     def __init__(self, *, domain, party_name, level=1):
         
-        self.stats = {"element": "cryo"}
+        self.element = "cryo"
+        self.stats = {}
+
+        self.charge_cost = 25
         
 
         # dmg output multiplies
@@ -52,8 +56,9 @@ class Kaeya(GrpgCharacter):
             90: 223
         }
 
-        self.stats['CRIT_RATE'] = 0.05
-        self.stats['CRIT_DMG'] = 0.50
+        self.stats['CR'] = 0.05
+        self.stats['CD'] = 0.50
+        self.stats['ER'] = 0.00
 
         super().__init__(domain, party_name, level)
 
@@ -61,7 +66,39 @@ class Kaeya(GrpgCharacter):
 
     def invoke_auto(self):
 
-        log.info(f"I {self.get_position()} from {self.party_name} am  invoking auto attack")
+        logging.info(f"{self.me}: invoking auto")
+
+        # auto attack configs
+        AOE = False
+
+
+        # TODO: apply remove/buffs debuffs on self and/or enemies, if any
+        
+        # calculate output dmg
+        base_atk = self.stats['BASE_ATK'] + self.wep["BASE_ATK"]
+        atk = base_atk * (1 + self.stats_buffs['ATK']) # any base atk buffs would go here.
+        auto_dmg_out = atk * self.stats["dmg_xer"]['auto']
+        final_dmg_out = auto_dmg_out * (1 + (self.stats_buffs['DMG'] + self.stats_buffs['CRYO_DMG']))
+
+        # hit the opponent(s)
+        opponent_party = get_opponents(self.party_name)
+        opponents = self.domain.parties[opponent_party]
+        for chara in opponents['charas']:
+            bonk = {'element': 'physical', 'dmg': final_dmg_out}
+            chara.hit(bonk)
+            if not AOE: break
+
+
+        
+
+    def invoke_charge(self):
+
+        if self.stamina < self.charge_cost:
+            return
+
+        self.stamina -= self.charge_cost
+
+        logging.info(f"I {self.party_pos()} from {self.party_name} am  invoking charge attack")
 
         # auto attack configs
         AOE = False
@@ -72,28 +109,23 @@ class Kaeya(GrpgCharacter):
         # calculate output dmg
         base_atk = self.stats['BASE_ATK'] + self.wep["BASE_ATK"]
         atk = base_atk * 1 # any base atk buffs would go here.
-        auto_dmg_out = atk * self.stats["dmg_xer"]['auto']
+        auto_dmg_out = atk * self.stats["dmg_xer"]['charge']
         final_dmg_out = auto_dmg_out * 1 # any final dmg output buffs go here.
 
         # hit the opponent(s)
         opponent_party = get_opponents(self.party_name)
         opponents = self.domain.parties[opponent_party]
         for chara in opponents['charas']:
-            bonk = {"element": self.stats['element'], 'dmg': final_dmg_out}
+            bonk = {"element": 'physical', 'dmg': final_dmg_out}
             chara.hit(bonk)
             if not AOE: break
 
 
-        
-
     def hit(self, bonk):
-        log.info(f'gaah I {self.get_position()} from {self.party_name} got hit')
-        self.stats['HP'] -= bonk['dmg']
-        log.info(f"after taking a bonk of dmg {bonk['dmg']}, i have {self.stats['HP']} remaining out of {self.stats['MAX_HP']}")
+        logging.info(f'{self.me} got hit')
+        self.HP -= bonk['dmg']
+        logging.info(f"dmg taken: {bonk['dmg']}, hp: {self.HP}/{self.stats['MAX_HP']}")
 
-
-    def invoke_charge(self):
-        pass
 
     def invoke_skill(self):
         pass

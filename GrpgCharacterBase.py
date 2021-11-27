@@ -1,6 +1,6 @@
 # TODO: add constellation support.
 
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 
 
 class GrpgCharacterBase(ABC):
@@ -54,16 +54,20 @@ class GrpgCharacterBase(ABC):
         pass
 
     @abstractmethod
-    def focus():
+    def take_field():
         """
         character switches on-field
         """
 
     @abstractmethod
-    def blur():
+    def leave_field():
         """
         character switches off-field
         """
+
+    @abstractmethod
+    def get_hp(self):
+        """returns character's current hp"""
 
     # @abstractmethod
     # def get_hp(self):
