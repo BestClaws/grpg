@@ -1,6 +1,6 @@
 import logging
 
-from util import get_stat
+from util import interpolate_stat
 from GrpgCharacterBase import GrpgCharacterBase
 
 
@@ -9,11 +9,12 @@ class GrpgCharacter(GrpgCharacterBase):
     def __init__(self, domain, party_name, level):
         super().__init__()
 
+        # non chara specific parameters.
 
-        # character's volatile stats
-        self.level = level
-        self.stamina = 225
-        self.energy = 0
+        self.stats['level'] = level
+        self.stats['stamina'] = 225
+        self.stats['energy'] = 0
+
 
         # character's state in the game.
         self.alive = True
@@ -50,18 +51,18 @@ class GrpgCharacter(GrpgCharacterBase):
     def infer_base_stats(self):
         """infers all the base stats using provided level and stats tables"""
 
-        if not self.level:
+        if not self.stats['level']:
             raise Exception("set a character level first!")
 
-        self.stats['BASE_ATK'] = get_stat(self.stats["base_atk_table"], self.level)
-        self.stats['MAX_HP'] = get_stat(self.stats["base_hp_table"], self.level)
+        self.stats['BASE_ATK'] = interpolate_stat(self.base_atk_table, self.stats['level'])
+        self.stats['MAX_HP'] = interpolate_stat(self.base_hp_table, self.stats['level'])
 
    
 
     def reset_hp(self):
         """restore character's full hp"""
         logging.info(f"{self.me}: resetting hp to MAX_HP")
-        self.HP = self.stats['MAX_HP']
+        self.stats['HP'] = self.stats['MAX_HP']
 
 
  
@@ -113,4 +114,4 @@ class GrpgCharacter(GrpgCharacterBase):
         pass
 
     def get_hp(self):
-        return self.HP
+        return self.stats['HP']

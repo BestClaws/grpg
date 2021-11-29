@@ -1,5 +1,7 @@
 import logging
 
+from V import V
+
 from util import get_opponents
 from GrpgCharacter import GrpgCharacter
 
@@ -7,22 +9,13 @@ class Kaeya(GrpgCharacter):
     
     def __init__(self, *, domain, party_name, level=1):
         
+        ### character specific parameters
+
+        ## Untweakable Parameters
         self.element = "cryo"
-        self.stats = {}
 
-        self.charge_cost = 25
         
-
-        # dmg output multiplies
-        self.stats['dmg_xer'] = {
-            'auto': 0.5,
-            'charge': 0.7,
-            'skill': 1.5,
-            'burst': 3.0
-        }
-
-        # x.5 denotes ascension, while x is unascended
-        self.stats["base_hp_table"] = {
+        self.base_hp_table = { # x.5 denotes ascension, while x is unascended
             1: 793,
             20: 2038,
             20.5: 2630,
@@ -39,7 +32,7 @@ class Kaeya(GrpgCharacter):
             90: 9461
         }
 
-        self.stats["base_atk_table"] = {
+        self.base_atk_table = {
             1: 19,
             20: 48,
             20.5: 62,
@@ -56,9 +49,24 @@ class Kaeya(GrpgCharacter):
             90: 223
         }
 
-        self.stats['CR'] = 0.05
-        self.stats['CD'] = 0.50
-        self.stats['ER'] = 0.00
+        ## Tweakable Parameters
+        self.stats = {}
+
+
+        self.stats['charge_cost'] = 25
+        
+       
+        self.stats['dmg_xer'] = { # dmg output multiplies
+            'auto': 0.5,
+            'charge': 0.7,
+            'skill': 1.5,
+            'burst': 3.0
+        }
+
+        self.stats['CR'] = 0.05 # crit rate
+        self.stats['CD'] = 0.50 # crit dmg
+        self.stats['ER'] = 0.00 # energy recharge
+
 
         super().__init__(domain, party_name, level)
 
@@ -80,6 +88,7 @@ class Kaeya(GrpgCharacter):
         auto_dmg_out = atk * self.stats["dmg_xer"]['auto']
         final_dmg_out = auto_dmg_out * (1 + (self.stats_buffs['DMG'] + self.stats_buffs['CRYO_DMG']))
 
+
         # hit the opponent(s)
         opponent_party = get_opponents(self.party_name)
         opponents = self.domain.parties[opponent_party]
@@ -93,10 +102,10 @@ class Kaeya(GrpgCharacter):
 
     def invoke_charge(self):
 
-        if self.stamina < self.charge_cost:
+        if self.stats['stamina'] < self.stats['charge_cost']:
             return
 
-        self.stamina -= self.charge_cost
+        self.stats['stamina'] -= self.stats['charge_cost']
 
         logging.info(f"I {self.party_pos()} from {self.party_name} am  invoking charge attack")
 
@@ -123,8 +132,8 @@ class Kaeya(GrpgCharacter):
 
     def hit(self, bonk):
         logging.info(f'{self.me} got hit')
-        self.HP -= bonk['dmg']
-        logging.info(f"dmg taken: {bonk['dmg']}, hp: {self.HP}/{self.stats['MAX_HP']}")
+        self.stats['HP'] -= bonk['dmg']
+        logging.info(f"dmg taken: {bonk['dmg']}, hp: {self.stats['HP']}/{self.stats['MAX_HP']}")
 
 
     def invoke_skill(self):

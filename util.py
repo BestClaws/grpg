@@ -1,5 +1,5 @@
 
-def get_stat(stats_table, level):
+def interpolate_stat(stats_table, level):
     """calculates the stats for intermediate levels not listed in table"""
     stat = stats_table.get(level)
     
