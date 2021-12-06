@@ -1,62 +1,61 @@
-import json
-import time
 import logging
+from . import log_config
 
-
-import log_config
-
-from GrpgCharacter import GrpgCharacter
 from collections import deque
-from event import Event
+from .event import Event
+from .util import get_opponent
 
-from Domain import Domain
+from .zhou import Zhou
 
 class Game:
     """Represents and holds the entire state of the game."""
     
     def __init__(self):
         logging.info("starting game")
-        self.turn = "A"
-        self.idle = "B"
+        self.player = "A"
 
         self.domain = None
-        self.swap = False
+        self.swap_turn = False
         self.events = deque([])
+
+        self.game_over = False
+        self.winner = None
 
 
     def pick_domain(self, name):
         """select a domain (arena) for the game"""
-        self.domain = Domain(name)
+        self.domain = Zhou(self)
 
-    def swap_turn(self):
-        """swap player turns"""
-        if self.turn == "A":
-            self.turn = "B"
-            self.idle = "A"
-        else:
-            self.turn = "A"
-            self.idle = "B"
 
-        logging.info(f"it's {self.turn}'s turn now, {self.idle} is idle.")
+
+    def try_swap_turn(self):
+        """
+        swap player turns if swap_turn is True\n
+        returns true if swap succeeded
+        """
+        if self.swap_turn:
+            self.player = 'A' if self.player == 'B' else "B"
+            self.swap_turn = not self.swap_turn
+            logging.info(f"it's {self.player}'s turn now, {get_opponent(self.player)} is idle.")
+            return True
+
+        return False
 
     def main_loop(self):
-        self.domain.influence()
-        self.handle_events()
-        
+        """
+        Game's mainloop
+        processes all game events, handles inputs, and makes everything else work
+        note: each loop doesnt mean a turn.
+        """
+        while not self.game_over:
+            self.handle_events()
 
-        # clear all buffs
-        for chara in self.domain.parties['A']['charas']:
-            chara.clear_buffs()
-        for chara in self.domain.parties['B']['charas']:
-            chara.clear_buffs()
-        
-        # swap turn if necessary.
-        if self.swap:
-            self.swap_turn()
-            self.swap = not self.swap
+            if self.try_swap_turn():
+                self.domain.tick()
+
+            yield
 
         yield
-
 
     def handle_events(self):
         """handle all game events"""
@@ -67,41 +66,39 @@ class Game:
             e = self.events.popleft()
 
 
-            party = self.domain.parties[self.turn]
-            active_chara: GrpgCharacter = party['charas'][party['onfield']]
+            player = self.domain.players[self.player]
+            active_chara = player['party'][player['on_chara']]
                 
-
             ## HANDLE INPUTS            
             # handle auto attack input
             if e.type == Event.ACTION_AUTO:
                 active_chara.invoke_auto()
-                self.swap = True
+                self.swap_turn = True
                 
 
             # handle charge attack input 
             elif e.type == Event.ACTION_CHARGE:
                 active_chara.invoke_charge()
-                self.swap = True
+                self.swap_turn = True
 
             # handle elemental skill input
             elif e.type == Event.ACTION_SKILL:
                 active_chara.invoke_skill()
-                self.swap = True
+                self.swap_turn = True
 
             # handle elemental burst input
             elif e.type == Event.ACTION_BURST:
                 active_chara.invoke_burst()
-                self.swap = True
+                self.swap_turn = True
 
             # handle character switch input 
             # (change onfield character)
             elif e.type == Event.ACTION_SWITCH:
-                party['onfield'] = e.val
-                # logging.info(f"I {party['onfield']} from {self.turn} take the field")
+                player['on_chara'] = e.val
                 
                 # emit focus and blur events for all characters in party.
-                for i in range(len(party['charas'])):
-                    if i == party['onfield']:
+                for i in range(len(player['party'])):
+                    if i == player['on_chara']:
                         self.events.append(Event(Event.CHARA_TAKES_FIELD, i))
                     else:
                         self.events.append(Event(Event.CHARA_LEAVES_FIELD, i))
@@ -109,42 +106,15 @@ class Game:
 
             elif e.type == Event.CHARA_TAKES_FIELD:
                 focus_target = e.val
-                party['charas'][focus_target].take_field()
+                player['party'][focus_target].take_field()
 
             elif e.type == Event.CHARA_LEAVES_FIELD:
                 blur_target = e.val
-                party['charas'][blur_target].leave_field()
+                player['party'][blur_target].leave_field()
+
+            elif e.type == Event.GAME_OVER:
+                self.winner = get_opponent(e.val)
+                self.game_over = True
         
         
 
-
-if __name__ == "__main__":
-    
-    # setup game
-    game = Game()
-    game.pick_domain("Zhou")
-    game.domain.add_party("A", "kaeya", "kaeya")
-    game.domain.add_party("B", "kaeya", "kaeya")
-    
-    game.main_loop().__next__()
-
-  
-
-    
-    while True:
-        key = input("enter value:")
-        if key == 'a':
-            game.events.append(Event(Event.ACTION_AUTO))
-        elif key == 'c':
-            game.events.append(Event(Event.ACTION_CHARGE))
-        elif key == '1':
-            game.events.append(Event(Event.ACTION_SWITCH, 1))
-        elif key == '2':
-            game.events.append(Event(Event.ACTION_SWITCH, 1))
-
-
-        game.main_loop().__next__()
-
-        logging.info("...................")
-        logging.info(game.turn)
-        logging.info("...................")

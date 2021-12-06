@@ -18,7 +18,5 @@ def interpolate_stat(stats_table, level):
 
     return stat
 
-def get_opponents(party_name):
-    if party_name == "A":
-        return "B"
-    else: return "A"
+def get_opponent(party_name):
+    return 'B' if party_name == 'A' else 'A'

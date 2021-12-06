@@ -1,16 +1,20 @@
 class V:
     def __init__(self, val=None):
-
+        """creates a V(alue) from a scalar."""
         self.val = None
         self.type = None
         self.children = None
         
-        if val:
+        if isinstance(val, (int, float)):
             self.val = val
             self.type = 'constant'
 
         
     def set(self, val):
+        """
+        assigns the given scalar value to  `V` 
+        (only applicable if `V` is of constant type)
+        """
         if self.type != 'constant':
             raise Exception('only constants support set()')
         self.val = val
@@ -35,7 +39,7 @@ class V:
             return V.get_div(self.children)
         
         else:
-            raise Exception('invalid V type')
+            raise Exception(f'invalid V type: {self.type}')
         
 
 
@@ -115,8 +119,8 @@ class V:
         return V.div(self, other)
         
     def __str__(self):
-        if self.type == 'constant':
-            return str(self.val)
-        else:
-            return super.__str__()
+            return str(self.get())
 
+
+def v(v: V):
+    return v.get()

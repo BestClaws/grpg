@@ -1,7 +1,6 @@
-import json
-import logging
+from copy import deepcopy
 
-from Kaeya import Kaeya
+from .kaeya import Kaeya
 
 class Domain:
     """
@@ -9,65 +8,47 @@ class Domain:
     Acts as an Environment/Stage where parties join and fight.
     Influences the battle by buffing/debuffing characters.
     """
+    def __init__(self, game):
 
-    def __init__(self, game, name="Zhou"):
         self.game = game
-
-        # load all domains' data
-        with open('assets/domains.json') as f:
-            self.data = json.load(f)[name]
-
-
-        self.buffs = self.data['buffs']
-
-        logging.info(f"picked {self.data['fullname']} domain")
-        logging.info(f'domain buffs: {self.buffs}')
-
-
+        
         # stores party charas and party meta data.
-        self.parties = {
-            "A": {
-                "charas": [],
-                "onfield": 0
-            },
-            "B": {
-                "charas": [],
-                "onfield": 0
-            }
+        # this should have been self.parties instead and only store the party info
+        # while other info should have been handled by the game but meh, works
+        # for now
+        player_data = {
+            "party": [],
+            "on_chara": 0,
+            # "uses": {
+            #     "auto": 0,
+            #     "charge": 0,
+            #     "skill": 0,
+            #     "burst": 0
+            # }
         }
+        self.players = {
+            "A": deepcopy(player_data),
+            "B": deepcopy(player_data)
+        }
+    
+
+    def add_player(self, player_name, *party):
+        """adds a player with given party of characters"""
+
+        if player_name not in ['A', 'B']:
+            raise Exception("invalid party_name name")
 
 
-    def add_party(self, party_name, *charas):
-        """creates a party of characters for the specified team [A/B]"""
 
-        if party_name not in ["A", "B"]:
-            raise Exception("invalid team name")
-
-        if len(charas) != 2:
-            raise("team supports exactly two characters")
-
-
-        for chara in charas:
+        for chara in party:
             # validate team member
-            logging.info(self.buffs)
-            chara = Kaeya(domain=self, party_name=party_name)
-            self.parties[party_name]["charas"].append(chara)
+            
+            chara = Kaeya(level=90)
+            chara.set_domain(self)
+            chara.set_player(player_name)
+            chara.set_weapon({'Base ATK': 200})
+            chara.prepare()
 
-
-    def influence(self):
-        """
-        Applies all buffs/debuffs to all party members
-        Influences in other ways (hp bleed etc., Not yet implemented)
-        """
-        logging.info('influencing')
-        charasA = self.parties["A"]["charas"]
-        charasB = self.parties["B"]["charas"]
-
-        for chara in charasA + charasB:
-            chara.apply_buffs(self.buffs)
-
-
-
-# test code only.
-if __name__ == "__main__":
-    d = Domain("Zhou")
+            self.players[player_name]['party'].append(chara)
+    
+    
