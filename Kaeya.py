@@ -3,7 +3,7 @@ import random
 
 from grpg.talent_impl import auto
 
-from .compute import V, v
+from .compute import E
 from .event import Event
 
 from .util import get_opponent

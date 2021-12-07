@@ -3,7 +3,7 @@ import os
 
 from thefuzz import process as fuzz_process
 
-from .compute import V
+from .compute import E
 from .util import interpolate_stat
 
 

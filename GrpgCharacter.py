@@ -2,7 +2,6 @@ import logging
 
 from grpg.weapon import Weapon
 from .stats import StatsManager
-from .compute import v
 from .event import Event
 
 from .GrpgCharacterBase import GrpgCharacterBase
@@ -64,7 +63,7 @@ class GrpgCharacter(GrpgCharacterBase):
     def reset_hp(self):
         """restore character's full hp"""
         logging.info(f"{self}: resetting hp to {self.stats.stats['Max HP']}")
-        self.current_hp = v(self.stats.stats['Max HP'])
+        self.current_hp = self.stats.stats['Max HP'].val
 
 
  
@@ -107,7 +106,7 @@ class GrpgCharacter(GrpgCharacterBase):
         logging.info(f"{self} got {'a crit hit' if bonk['crit'] else ''} hit with {bonk['dmg']}")
 
         
-        dmg_taken = bonk['dmg'].get()
+        dmg_taken = bonk['dmg'].val
 
         # damage taken is above hp, so character dies. also emit event.
         if dmg_taken >= self.current_hp:
@@ -125,7 +124,7 @@ class GrpgCharacter(GrpgCharacterBase):
                 self.domain.game.events.append(Event(Event.GAME_OVER, self.player_name))
         
         else:
-            self.current_hp = self.current_hp -  v(bonk['dmg'])
+            self.current_hp = self.current_hp -  bonk['dmg'].val
             logging.info(f"dmg taken: {bonk['dmg']}, hp: {self.current_hp}/{self.stats.stats['Max HP']}")
 
 

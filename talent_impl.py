@@ -4,7 +4,6 @@
 import logging
 from .util import get_opponent
 import random
-from .compute import v
 
 def auto(func):
     def wrapper(self):
@@ -40,7 +39,7 @@ def auto(func):
 
 
         crit = False
-        if v(self.stats.stats['Crit Rate']) > random.random(): crit = True
+        if self.stats.stats['Crit Rate'].val > random.random(): crit = True
         self.crit_dmg_out = self.bonus_dmg_out * ((self.stats.stats['Crit DMG'] + 1) if crit else 1)
 
 
@@ -60,7 +59,6 @@ def auto(func):
 import logging
 from .util import get_opponent
 import random
-from .compute import v
 
 def charge(func):
     def wrapper(self):
@@ -93,7 +91,7 @@ def charge(func):
 
 
         crit = False
-        if v(self.stats.stats['Crit Rate']) > random.random(): crit = True
+        if self.stats.stats['Crit Rate'].val > random.random(): crit = True
         crit_dmg_out = bonus_dmg_out * ((self.stats.stats['Crit DMG'] + 1) if crit else 1)
 
 
