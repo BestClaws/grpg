@@ -1,9 +1,12 @@
 import logging
+
+from grpg.weapon import Weapon
 from .stats import StatsManager
 from .compute import v
 from .event import Event
 
 from .GrpgCharacterBase import GrpgCharacterBase
+from .talent_impl import auto, charge, skill, burst, plunge
 
 
 class GrpgCharacter(GrpgCharacterBase):
@@ -12,7 +15,7 @@ class GrpgCharacter(GrpgCharacterBase):
         super().__init__()
         
         # character's state in the game.
-        self.weapon = None
+        self.weapon: Weapon = None
         self.domain = None
         self.player_name = None
         self.current_hp = None
@@ -101,7 +104,7 @@ class GrpgCharacter(GrpgCharacterBase):
         elem = bonk['element']
         #TODO: do elemental reaction stuff and get dmg. tuple
 
-        logging.info(f"{self} got hit with {bonk['dmg']}")
+        logging.info(f"{self} got {'a crit hit' if bonk['crit'] else ''} hit with {bonk['dmg']}")
 
         
         dmg_taken = bonk['dmg'].get()
@@ -126,6 +129,13 @@ class GrpgCharacter(GrpgCharacterBase):
             logging.info(f"dmg taken: {bonk['dmg']}, hp: {self.current_hp}/{self.stats.stats['Max HP']}")
 
 
+
+    def equip_weapon(self, name, level):
+        """equips a weapon of given name and level"""
+        self.weapon = Weapon(name, level)
+
+        # inherit its buffs
+        self.stats.apply_pbuffs(self.weapon.pbuffs)
 
 
     def is_onfield(self):
@@ -164,3 +174,27 @@ class GrpgCharacter(GrpgCharacterBase):
                 data[k] = v
 
         return data
+        
+    
+    #SECTION: ABILITIES
+
+    @auto
+    def invoke_auto(self):
+        pass
+        
+    @charge
+    def invoke_charge(self):
+      pass
+
+    @skill
+    def invoke_skill(self):
+        pass
+
+    @burst
+    def invoke_burst(self):
+        pass
+    
+    @plunge
+    def invoke_plunge(self):
+        pass
+  

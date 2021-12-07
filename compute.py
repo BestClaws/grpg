@@ -9,6 +9,14 @@ class V:
             self.val = val
             self.type = 'constant'
 
+        # prevent double wrapping.
+        elif isinstance(val, V):
+            self.val = val.get()
+
+        elif val is not None:
+
+            raise Exception(f"unsupported initial value: {val}")
+
         
     def set(self, val):
         """
@@ -81,6 +89,7 @@ class V:
         for arg in args:
             if isinstance(arg, V):
                 op_val.children.append(arg)
+
         return op_val 
 
     @classmethod
@@ -120,6 +129,23 @@ class V:
         
     def __str__(self):
             return str(self.get())
+
+
+    def update(self):
+        """updates the expression"""
+
+    def eq(self):
+        if self.type == 'constant':
+            return str(self.val)
+        
+        if self.type == 'sum':
+            return '(' + ' + '.join([child.eq() for child in self.children])  + ')'
+        if self.type == 'sub':
+            return '(' + ' + '.join([child.eq() for child in self.children])  + ')'
+        if self.type == 'mul':
+            return '(' + ' * '.join([child.eq() for child in self.children])  + ')'
+        if self.type == 'div':
+            return '(' + ' / '.join([child.eq() for child in self.children])  + ')'
 
 
 def v(v: V):

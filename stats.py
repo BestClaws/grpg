@@ -1,4 +1,7 @@
+import logging
 from .compute import V
+from .util import interpolate_stat
+from copy import deepcopy
 
 class StatsManager:
     """Stores and Manages all the Character's stats."""
@@ -32,7 +35,7 @@ class StatsManager:
             'Elemental Mastery': V(0),
             'Max Stamina': V(0),
             'Crit DMG': V(0),
-            'Crit Rate': V(0),
+            'Crit Rate': V(0.5),
             'Healing Bonus': V(0),
             'Incoming Healing Bonus': V(0),
             'Energy Recharge': V(0),
@@ -58,9 +61,9 @@ class StatsManager:
         }
 
         # percentage buffs
-        self.pbuffs = self.stats
+        self.pbuffs = deepcopy(self.stats)
         # flat buffs
-        self.fbuffs = self.stats
+        self.fbuffs = deepcopy(self.stats)
 
 
     def prepare(self):
@@ -78,7 +81,7 @@ class StatsManager:
         _base_hp = self.interpolate_stat('Base HP')
         s['Max HP'] = V(_base_hp) * (pb['Max HP'] + 1) + fb['Max HP']
         
-        _base_atk = self.interpolate_stat('Base ATK') + self.chara.weapon['Base ATK']
+        _base_atk = self.interpolate_stat('Base ATK') + self.chara.weapon.base_atk
         s['ATK'] = (pb['ATK'] + 1) * _base_atk + fb['ATK']
 
         s['DEF'] # = ?
@@ -93,10 +96,17 @@ class StatsManager:
 
 
 
+    def apply_pbuffs(self, data):
+        for stat, val in data.items():
+            self.pbuffs[stat] += V(val)
+            logging.info(f"{self.chara}: sm >> buffed {stat} % : +{val}. total: {self.pbuffs[stat].eq()}")
 
 
-        def buff(self, *, stat, val):
-            pass
+    def apply_fbuffs(self, data):
+        for stat, val in data.items():
+            self.fbuffs[stat] += V(val)
+            logging.info(f"{self.chara}: sm >> buffed {stat} flat : +{val}. total: {self.fbuffs[stat].eq()}")
+
 
 
 
@@ -108,21 +118,5 @@ class StatsManager:
         table = self.inherent['Stats'][stat_name]
         level = self.inherent['Level']
 
-        if not bool(table): return 0
+        return interpolate_stat(table, level)
 
-        stat = table.get(level)
-        
-        if not stat:
-            # find the lower and higher levels that the given level is between.
-            low = high = 1      
-            for lvl in table.keys():
-                if level > lvl:
-                    low = lvl
-                else:
-                    high = lvl
-                    break
-
-            step = (table[high] - table[low]) / (high - low)
-            stat = table[low] + (step * (level - low))
-
-        return stat

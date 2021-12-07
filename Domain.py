@@ -46,7 +46,7 @@ class Domain:
             chara = Kaeya(level=90)
             chara.set_domain(self)
             chara.set_player(player_name)
-            chara.set_weapon({'Base ATK': 200})
+            chara.equip_weapon('aquila', 90)
             chara.prepare()
 
             self.players[player_name]['party'].append(chara)
