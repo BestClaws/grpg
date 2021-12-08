@@ -1,7 +1,7 @@
 import logging
 import random
 
-from grpg.talent_impl import auto
+from .talent_impl import auto
 
 from .compute import E
 from .event import Event
@@ -13,7 +13,8 @@ class Kaeya(GrpgCharacter):
     
     def __init__(self, level=1):
         
-        # inherent parameters, not tweakable.   
+        self.name = "Kaeya"
+        # inherent parameters, not tweakable. 
         inherent = {
             'Level': level,
             'Element': 'cryo',

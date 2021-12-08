@@ -17,15 +17,16 @@ def auto(func):
 
         # record auto attack streak (decides the damage multiplier to use)
         # TODO: getting interrupted or using other talents should reset the streak.
-        if self.auto.get('streak') is None:
-            self.auto['streak'] = 0
+        data = self.talent_data['auto']
+        if data.get('streak') is None:
+            data['streak'] = 0
         else:
-            self.auto['streak'] += 1
+            data['streak'] += 1
         
         # pick the damange multiplier based on streak.
         #  (1-hit dmg, 2-hit dmg, etc.,)
         mulitplier_list = talent['DMG']
-        i = self.auto['streak'] % len(mulitplier_list) 
+        i = data['streak'] % len(mulitplier_list) 
         xer = mulitplier_list[i]
         logging.info(f"{self}: invoking auto {i} with dmg scale: {xer}")
 
@@ -33,14 +34,18 @@ def auto(func):
 
         # TODO: apply remove/buffs debuffs on self and/or enemies, if any
         
+        # TODO: since these are expressions maybe they dont need to be created everytime an 
+        # auto is invoked?
+
         # calculate output dmg
-        self.ability_dmg_out = self.stats.stats['ATK'] * xer
-        self.bonus_dmg_out = self.ability_dmg_out * (self.stats.stats['Physical DMG Bonus'] + 1)
+        self.ability_dmg = self.stats.stats['ATK'] * xer
+        self.bonus_dmg = self.ability_dmg * (self.stats.stats['Physical DMG Bonus'] + 1)
+
 
 
         crit = False
         if self.stats.stats['Crit Rate'].val > random.random(): crit = True
-        self.crit_dmg_out = self.bonus_dmg_out * ((self.stats.stats['Crit DMG'] + 1) if crit else 1)
+        self.dmg_post_crit = self.bonus_dmg * ((self.stats.stats['Crit DMG'] + 1) if crit else 1)
 
 
         # make changes as per required by character
@@ -50,15 +55,18 @@ def auto(func):
         opponent_name = get_opponent(self.player_name)
         opponent = self.domain.players[opponent_name]
         chara = opponent['party'][opponent['on_chara']]
-        bonk = {'element': 'physical', 'crit': crit, 'dmg': self.crit_dmg_out}
-        chara.get_hit(bonk)
+        bonk = {
+            'element': 'Cryo',
+            'crit': crit,
+            'dmg': self.dmg_post_crit,
+            'em': self.stats.stats['Elemental Mastery']
+            }
+        chara.take_hit(bonk)
         pass
     return wrapper
 
 
-import logging
-from .util import get_opponent
-import random
+
 
 def charge(func):
     def wrapper(self):
@@ -85,14 +93,14 @@ def charge(func):
         # TODO: apply remove/buffs debuffs on self and/or enemies
         
         # calculate output dmg
-        ability_dmg_out = self.stats.stats['ATK'] * talent['DMG']
+        self.ability_dmg = self.stats.stats['ATK'] * talent['DMG']
 
-        bonus_dmg_out = ability_dmg_out * (self.stats.stats['Physical DMG Bonus'] + 1)
+        self.bonus_dmg = self.ability_dmg * (self.stats.stats['Physical DMG Bonus'] + 1)
 
 
         crit = False
         if self.stats.stats['Crit Rate'].val > random.random(): crit = True
-        crit_dmg_out = bonus_dmg_out * ((self.stats.stats['Crit DMG'] + 1) if crit else 1)
+        self.dmg_post_crit = self.bonus_dmg * ((self.stats.stats['Crit DMG'] + 1) if crit else 1)
 
 
         # configure as per character's wish
@@ -102,8 +110,13 @@ def charge(func):
         opponent_name = get_opponent(self.player_name)
         opponent = self.domain.players[opponent_name]
         for chara in opponent['party']:
-            bonk = {'element': 'physical', 'crit': crit, 'dmg': crit_dmg_out}
-            chara.get_hit(bonk)
+            bonk = {
+                'element': 'Pyro',
+                'crit': crit,
+                'dmg': self.dmg_post_crit,
+                'em': self.stats.stats['Elemental Mastery']
+            }
+            chara.take_hit(bonk)
     return wrapper
 
 

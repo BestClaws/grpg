@@ -1,6 +1,10 @@
 import logging
 
-from grpg.weapon import Weapon
+from grpg.reactions import Reactor
+
+from .compute import E
+
+from .weapon import Weapon
 from .stats import StatsManager
 from .event import Event
 
@@ -20,15 +24,20 @@ class GrpgCharacter(GrpgCharacterBase):
         self.current_hp = None
         self.current_stamina = 225
         self.alive = True
+        self.name = self.name or "??"
 
         self.stats = StatsManager(self, inherent)
+        self.reactor = Reactor(self)
 
         
         # player talents' action data.
-        self.auto = {}
-        self.charge = {}
-        self.skill = {}
-        self.burst = {}
+        self.talent_data = {
+            'auto': {},
+            'charge': {},
+            'skill': {},
+            'burst': {},
+            'plunge': {}
+        }
 
 
 
@@ -46,7 +55,7 @@ class GrpgCharacter(GrpgCharacterBase):
 
     def __str__(self):
         """provides a meaningful name for logging."""
-        return f'({self.party_pos}{self.player_name})' 
+        return f'({self.party_pos}{self.player_name} {self.name})' 
 
 
 
@@ -93,23 +102,49 @@ class GrpgCharacter(GrpgCharacterBase):
 
 
     def get_hp(self):
+        """
+        get's the current hp
+        NOTE: why's this even a function
+        """
         return self.current_hp
 
 
 
 
-    def get_hit(self, bonk):
+    def take_hit(self, bonk):
         """get hit by a bonk """
-        elem = bonk['element']
-        #TODO: do elemental reaction stuff and get dmg. tuple
 
-        logging.info(f"{self} got {'a crit hit' if bonk['crit'] else ''} hit with {bonk['dmg']}")
+        logging.info(f"{self} got {'a crit hit' if bonk['crit'] else ''} hit with {bonk['dmg'].val}, exp: {bonk['dmg'].eq()}")
+
+
+        elem = bonk['element']
+        em = bonk['em'].val
+        self.dmg_in = bonk['dmg']
+
+
+
+        # post RES dmg
+        RES = self.stats.get_RES(elem)
+        if RES.val < 0:
+            self.post_res_dmg = self.dmg_in * (-(RES/2) + 1)
+        elif 0 <= RES.val < 0.75:
+            self.post_res_dmg = self.dmg_in * (E.sub(0, RES) + 1)
+        elif RES.val >= 0.75:
+            self.post_res_dmg = self.dmg_in * (E.div(1/((RES * 4)+1)))
 
         
-        dmg_taken = bonk['dmg'].val
+
+        #TODO: do elemental reaction stuff and get dmg. tuple
+        self.reactor.react(elem, em)
+
+
+
+
+
+        self.final_dmg = self.post_res_dmg * self.amplification
 
         # damage taken is above hp, so character dies. also emit event.
-        if dmg_taken >= self.current_hp:
+        if self.final_dmg.val >= self.current_hp:
             self.alive = False
             self.domain.game.events.append(Event(Event.CHARA_FALL, self.party_pos))
             self.current_hp = 0
@@ -124,8 +159,9 @@ class GrpgCharacter(GrpgCharacterBase):
                 self.domain.game.events.append(Event(Event.GAME_OVER, self.player_name))
         
         else:
-            self.current_hp = self.current_hp -  bonk['dmg'].val
-            logging.info(f"dmg taken: {bonk['dmg']}, hp: {self.current_hp}/{self.stats.stats['Max HP']}")
+            # reduce hp with final dmg
+            self.current_hp = self.current_hp -  self.final_dmg.val
+            logging.info(f"dmg taken: {self.final_dmg.val}, hp: {self.current_hp}/{self.stats.stats['Max HP']} eq: {self.final_dmg.eq()}")
 
 
 

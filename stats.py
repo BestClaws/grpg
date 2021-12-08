@@ -34,7 +34,7 @@ class StatsManager:
             'DEF': E(0),
             'Elemental Mastery': E(0),
             'Max Stamina': E(0),
-            'Crit DMG': E(0),
+            'Crit DMG': E(0.5),
             'Crit Rate': E(0.5),
             'Healing Bonus': E(0),
             'Incoming Healing Bonus': E(0),
@@ -97,20 +97,24 @@ class StatsManager:
 
 
     def apply_pbuffs(self, data):
+        if not isinstance(data, dict) or not bool(data): return
         for stat, val in data.items():
             self.pbuffs[stat] += E(val)
             logging.info(f"{self.chara}: sm >> buffed {stat} % : +{val}. total: {self.pbuffs[stat].eq()}")
 
 
     def apply_fbuffs(self, data):
+        if not isinstance(data, dict) or not bool(data): return
         for stat, val in data.items():
             self.fbuffs[stat] += E(val)
             logging.info(f"{self.chara}: sm >> buffed {stat} flat : +{val}. total: {self.fbuffs[stat].eq()}")
 
 
 
-
-
+    def get_RES(self, element: str):
+        """return's the character's aggregate RES (includes normal RES too) for given element"""
+        return self.stats[element + ' RES']
+        
 
     def interpolate_stat(self, stat_name):
         """calculates the stats for intermediate levels not listed in table"""
