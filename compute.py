@@ -1,3 +1,12 @@
+# WARNING: method update() is unsafe
+# compound expression formed with current expression cannot be used to update
+# the current expression; as these will cause infinite loops
+
+# example 1: updating E1 with E2; where E2 =  E1 + 1
+# example 2: updating E1 with E2; where E2 = E3 + 1 but  E3 = E1 + 1
+
+import warnings
+
 class E:
     """
     E denotes Expression, and evaluates to a scalar (can be `int`, `float`)\n
@@ -12,7 +21,7 @@ class E:
         
         if isinstance(val, (int, float)):
             self._val = val
-            self._type = 'constant'
+            self._type = 'scalar'
 
         # prevent double wrapping.
         elif isinstance(val, E):
@@ -25,17 +34,17 @@ class E:
     def set(self, val):
         """
         assigns the given scalar value to  `E` 
-        (only applicable if `E` is of constant type) \n
+        (only applicable if `E` is of scalar type) \n
         """
-        if self._type != 'constant':
-            raise Exception('only constants support set()')
+        if self._type != 'scalar':
+            raise Exception('only scalars support set()')
         self._val = val
 
     @property
     def val(self):
         """get the evaluated value of `E`"""
         
-        if self._type == 'constant':
+        if self._type == 'scalar':
             return  self._val
         
         elif self._type == 'sum':
@@ -93,6 +102,8 @@ class E:
         for arg in args:
             if isinstance(arg, E):
                 op_val.children.append(arg)
+            elif isinstance(arg, (int, float)):
+                op_val.children.append(E(arg))
 
         return op_val 
 
@@ -107,30 +118,23 @@ class E:
     def mul(cls, *args):
         return cls._op('mul', args)
     @classmethod
-    def sub(cls, *args):
+    def div(cls, *args):
         return cls._op('div', args)
 
 
-
+    # useful operator overloads.
     def __add__(self, other):
-        if isinstance(other, (int, float)):
-            other = E(other)
         return E.sum(self, other)
 
     def __sub__(self, other):
-        if isinstance(other, (int, float)):
-            other = E(other)
         return E.sub(self, other)
         
     def __mul__(self, other):
-        if isinstance(other, (int, float)):
-            other = E(other)
         return E.mul(self, other)
         
     def __truediv__(self, other):
-        if isinstance(other, (int, float)):
-            other = E(other)
         return E.div(self, other)
+
         
     def __str__(self):
             return str(self.val)
@@ -138,12 +142,15 @@ class E:
 
     def update(self, e):
         """updates `E` to a new `E`"""
+        warnings.warn('self@E.update() is dangerous. make sure to use deepcopy\n\
+            to get around example 1. and dont do example 2 in the first place\n\
+            refer compute.py for examples')
         self._type = e.type
         self._val = e.val
 
 
     def eq(self):
-        if self._type == 'constant':
+        if self._type == 'scalar':
             return str(self._val)
         
         if self._type == 'sum':
