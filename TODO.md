@@ -1,6 +1,5 @@
 - plunge attacks?
 - interruption?
 - can charge attacks be interrupted?
-- implement DEF and RES mechanics
-- implement reactionmanager
-- tickmanager
+- implement DEF mechanics
+- implement tickmanager

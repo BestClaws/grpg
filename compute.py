@@ -142,12 +142,27 @@ class E:
 
     def update(self, e):
         """updates `E` to a new `E`"""
-        warnings.warn('self@E.update() is dangerous. make sure to use deepcopy\n\
-            to get around example 1. and dont do example 2 in the first place\n\
-            refer compute.py for examples')
-        self._type = e.type
-        self._val = e.val
+        warnings.warn('self@E.update() is dangerous\n\
+            refer compute.py as to why')
+        
+        
+        self._type = e._type
+        self.children = e.children
+        self._val = e._val
 
+    def update2(self, e):
+        for i in range(len(e.children)):
+            if e.children[i] is self:
+                clone = E()
+                clone._type = self._type
+                clone._val = self._val
+                clone.children = self.children
+
+                e.children[i] = clone
+
+
+        self.update(e)
+        
 
     def eq(self):
         if self._type == 'scalar':

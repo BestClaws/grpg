@@ -4,15 +4,13 @@
 import logging
 from .util import get_opponent
 import random
+from .compute import E
 
 def auto(func):
     def wrapper(self):
         
-        #SECTION: auto attack configs
-        AOE = False
 
-        #END
-
+        print('stop here')
         talent = self.get_talent('auto')
 
         # record auto attack streak (decides the damage multiplier to use)
@@ -31,22 +29,19 @@ def auto(func):
         logging.info(f"{self}: invoking auto {i} with dmg scale: {xer}")
 
 
+        # update damage multiplier
+        self.fs.ability_xer.set(xer)
 
-        # TODO: apply remove/buffs debuffs on self and/or enemies, if any
-        
-        # TODO: since these are expressions maybe they dont need to be created everytime an 
-        # auto is invoked?
-
-        # calculate output dmg
-        self.ability_dmg = self.stats.stats['ATK'] * xer
-        self.bonus_dmg = self.ability_dmg * (self.stats.stats['Physical DMG Bonus'] + 1)
+        # update dmg bonuses
+        new_exp = self.fs.ability_dmg * (self.sm.stats['Physical DMG Bonus'] + 1)
+        self.fs.dmg_post_bonus.update(new_exp)
 
 
-
-        crit = False
-        if self.stats.stats['Crit Rate'].val > random.random(): crit = True
-        self.dmg_post_crit = self.bonus_dmg * ((self.stats.stats['Crit DMG'] + 1) if crit else 1)
-
+        # update whether hit was ciritical
+        if self.sm.stats['Crit Rate'].val > random.random():
+            self.fs.critical_hit.set(1)
+        else:
+            self.fs.critical_hit.set(0)
 
         # make changes as per required by character
         func(self)
@@ -57,10 +52,13 @@ def auto(func):
         chara = opponent['party'][opponent['on_chara']]
         bonk = {
             'element': 'Cryo',
-            'crit': crit,
-            'dmg': self.dmg_post_crit,
-            'em': self.stats.stats['Elemental Mastery']
+            'crit': self.fs.critical_hit,
+            'dmg': self.fs.dmg_post_crit.val,
+            'em': self.sm.stats['Elemental Mastery'].val
             }
+
+        logging.info(f"{self} outgoing {'a crit ' if bonk['crit'] else ''} hit with {bonk['dmg']}, exp: {self.fs.dmg_post_crit.eq()}")
+        
         chara.take_hit(bonk)
         pass
     return wrapper
@@ -71,36 +69,30 @@ def auto(func):
 def charge(func):
     def wrapper(self):
 
-        #SECTION: auto attack configs
-        self.AOE = True
-
-        #END
-
-        
         talent = self.get_talent('charge')
+
+        logging.info(f"{self}: invoking charge attack with xer: {talent['DMG']}")
 
         if self.current_stamina < talent['Stamina Cost']:
             # not enough stamina
             return
-
         self.current_stamina -= talent['Stamina Cost']
 
-        logging.info(f"{self}: invoking charge attack with xer: {talent['DMG']}")
 
-
-
-
-        # TODO: apply remove/buffs debuffs on self and/or enemies
         
-        # calculate output dmg
-        self.ability_dmg = self.stats.stats['ATK'] * talent['DMG']
+        # update ability multiplier
+        self.fs.ability_xer.set(talent['DMG'])
 
-        self.bonus_dmg = self.ability_dmg * (self.stats.stats['Physical DMG Bonus'] + 1)
+        # update dmg bonuses
+        new_exp = self.fs.ability_dmg * (self.sm.stats['Physical DMG Bonus'] + 1)
+        self.fs.dmg_post_bonus.update(new_exp)
 
 
-        crit = False
-        if self.stats.stats['Crit Rate'].val > random.random(): crit = True
-        self.dmg_post_crit = self.bonus_dmg * ((self.stats.stats['Crit DMG'] + 1) if crit else 1)
+        # update whether hit was ciritical
+        if self.sm.stats['Crit Rate'].val > random.random():
+            self.fs.critical_hit.set(1)
+        else:
+            self.fs.critical_hit.set(0)
 
 
         # configure as per character's wish
@@ -112,11 +104,14 @@ def charge(func):
         for chara in opponent['party']:
             bonk = {
                 'element': 'Pyro',
-                'crit': crit,
-                'dmg': self.dmg_post_crit,
-                'em': self.stats.stats['Elemental Mastery']
+                'crit': self.fs.critical_hit.val,
+                'dmg': self.fs.dmg_post_crit.val,
+                'em': self.sm.stats['Elemental Mastery'].val
             }
+            
+            logging.info(f"{self} outgoing {'a crit ' if bonk['crit'] else ''} hit with {bonk['dmg']}, exp: {self.fs.dmg_post_crit.eq()}")
             chara.take_hit(bonk)
+ 
     return wrapper
 
 

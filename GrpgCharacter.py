@@ -1,8 +1,9 @@
 import logging
 
-from grpg.reactions import Reactor
+from .reactions import Reactor
 
 from .compute import E
+from .formulae import FormulaeStore
 
 from .weapon import Weapon
 from .stats import StatsManager
@@ -26,7 +27,8 @@ class GrpgCharacter(GrpgCharacterBase):
         self.alive = True
         self.name = self.name or "??"
 
-        self.stats = StatsManager(self, inherent)
+        self.sm = StatsManager(self, inherent)
+        self.fs = FormulaeStore(self)
         self.reactor = Reactor(self)
 
         
@@ -62,7 +64,7 @@ class GrpgCharacter(GrpgCharacterBase):
     def prepare(self):
         """prepare before entering the domain"""
         logging.info(f"{self}: preparing")
-        self.stats.prepare()
+        self.sm.prepare()
         self.reset_hp()
 
 
@@ -71,8 +73,8 @@ class GrpgCharacter(GrpgCharacterBase):
 
     def reset_hp(self):
         """restore character's full hp"""
-        logging.info(f"{self}: resetting hp to {self.stats.stats['Max HP']}")
-        self.current_hp = self.stats.stats['Max HP'].val
+        logging.info(f"{self}: resetting hp to {self.sm.stats['Max HP']}")
+        self.current_hp = self.sm.stats['Max HP'].val
 
 
  
@@ -114,37 +116,25 @@ class GrpgCharacter(GrpgCharacterBase):
     def take_hit(self, bonk):
         """get hit by a bonk """
 
-        logging.info(f"{self} got {'a crit hit' if bonk['crit'] else ''} hit with {bonk['dmg'].val}, exp: {bonk['dmg'].eq()}")
 
 
         elem = bonk['element']
-        em = bonk['em'].val
-        self.dmg_in = bonk['dmg']
-
-
-
-        # post RES dmg
-        RES = self.stats.get_RES(elem)
-        if RES.val < 0:
-            self.post_res_dmg = self.dmg_in * (-(RES/2) + 1)
-        elif 0 <= RES.val < 0.75:
-            self.post_res_dmg = self.dmg_in * (E.sub(0, RES) + 1)
-        elif RES.val >= 0.75:
-            self.post_res_dmg = self.dmg_in * (E.div(1/((RES * 4)+1)))
+        em = bonk['em']
+        dmg_in = bonk['dmg']
 
         
+        # update incoming dmg
+        self.fs.dmg_in.set(dmg_in)
 
-        #TODO: do elemental reaction stuff and get dmg. tuple
+        # update final res
+        self.fs.final_res.update(self.sm.calc_RES(elem))
+
+        #TODO: do elemental reaction stuff
         self.reactor.react(elem, em)
 
 
-
-
-
-        self.final_dmg = self.post_res_dmg * self.amplification
-
         # damage taken is above hp, so character dies. also emit event.
-        if self.final_dmg.val >= self.current_hp:
+        if self.fs.final_dmg.val >= self.current_hp:
             self.alive = False
             self.domain.game.events.append(Event(Event.CHARA_FALL, self.party_pos))
             self.current_hp = 0
@@ -160,8 +150,8 @@ class GrpgCharacter(GrpgCharacterBase):
         
         else:
             # reduce hp with final dmg
-            self.current_hp = self.current_hp -  self.final_dmg.val
-            logging.info(f"dmg taken: {self.final_dmg.val}, hp: {self.current_hp}/{self.stats.stats['Max HP']} eq: {self.final_dmg.eq()}")
+            self.current_hp = self.current_hp -  self.fs.final_dmg.val
+            logging.info(f"dmg taken: {self.fs.final_dmg.val}, hp: {self.current_hp}/{self.sm.stats['Max HP']} eq: {self.fs.final_dmg.eq()}")
 
 
 
@@ -170,7 +160,7 @@ class GrpgCharacter(GrpgCharacterBase):
         self.weapon = Weapon(name, level)
 
         # inherit its buffs
-        self.stats.apply_pbuffs(self.weapon.pbuffs)
+        self.sm.apply_pbuffs(self.weapon.pbuffs)
 
 
     def is_onfield(self):
@@ -189,7 +179,7 @@ class GrpgCharacter(GrpgCharacterBase):
 
     def get_stats(self):
         """returns all the necessary character's state for debugging"""
-        return f"""{self}>> hp: {self.get_hp()}/{self.stats.stats['Max HP']}, stamina: {self.current_stamina}/ {self.stats.stats['Max Stamina']} """
+        return f"""{self}>> hp: {self.get_hp()}/{self.sm.stats['Max HP']}, stamina: {self.current_stamina}/ {self.sm.stats['Max Stamina']} """
         
 
 
@@ -198,8 +188,8 @@ class GrpgCharacter(GrpgCharacterBase):
         if talent_name not in ['auto', 'charge', 'skill', 'burst']:
             raise Exception('Invalid talent_name')
 
-        level = self.stats.inherent['Talents'][talent_name]['Level']
-        talent = self.stats.inherent['Talents'][talent_name]
+        level = self.sm.inherent['Talents'][talent_name]['Level']
+        talent = self.sm.inherent['Talents'][talent_name]
 
         data = dict()
         for k, v in talent.items():

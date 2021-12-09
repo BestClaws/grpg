@@ -79,14 +79,14 @@ class StatsManager:
         i = self.inherent
         
         _base_hp = self.interpolate_stat('Base HP')
-        s['Max HP'] = E(_base_hp) * (pb['Max HP'] + 1) + fb['Max HP']
+        s['Max HP'].update(E(_base_hp) * (pb['Max HP'] + 1) + fb['Max HP'])
         
         _base_atk = self.interpolate_stat('Base ATK') + self.chara.weapon.base_atk
-        s['ATK'] = (pb['ATK'] + 1) * _base_atk + fb['ATK']
+        s['ATK'].update((pb['ATK'] + 1) * _base_atk + fb['ATK'])
 
         s['DEF'] # = ?
 
-        s['Elemental Mastery'] = s['Elemental Mastery'] + fb['Elemental Mastery']
+        s['Elemental Mastery'].update2(s['Elemental Mastery'] + fb['Elemental Mastery'])
 
         s['Max Stamina'] # = ?, maybe current stamina should be part of stats? cuz some domains affect that
         
@@ -111,7 +111,7 @@ class StatsManager:
 
 
 
-    def get_RES(self, element: str):
+    def calc_RES(self, element: str):
         """return's the character's aggregate RES (includes normal RES too) for given element"""
         return self.stats[element + ' RES']
         

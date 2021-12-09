@@ -32,26 +32,29 @@ class Reactor:
         # amplifying reactions
         import math
 
-        self.chara.amplification = 1.0
 
         if self.applied_elements[-2:] == ['Hydro', 'Pyro']:
             # vap
-            self.chara.amplification = 1.5 * (1 + 0.00189266831 * em * math.exp(-0.000505 * em))
+            self.chara.fs.amplification.set(1.5 * (1 + 0.00189266831 * em * math.exp(-0.000505 * em)))
+            self.applied_elements[-2:] = []
             pass
 
         if self.applied_elements[-2:] == ['Pyro', 'Hydro']:
             # reverse vap
-            self.chara.amplification = 2.0 * (1 + 0.00189266831 * em * math.exp(-0.000505 * em))
+            self.chara.fs.amplification.set(2.0 * (1 + 0.00189266831 * em * math.exp(-0.000505 * em)))
+            self.applied_elements[-2:] = []
             pass
 
         if self.applied_elements[-2:] == ['Cryo', 'Pyro']:
             # melt
-            self.chara.amplification = 2.0 * (1 + 0.00189266831 * em * math.exp(-0.000505 * em))
+            self.chara.fs.amplification.set(2.0 * (1 + 0.00189266831 * em * math.exp(-0.000505 * em)))
+            self.applied_elements[-2:] = []
             pass
 
         if self.applied_elements[-2:] == ['Pyro', 'Cryo']:
             # rev melt
-            self.chara.amplification = 1.5 * (1 + 0.00189266831 * em * math.exp(-0.000505 * em))
+            self.chara.fs.amplification.set(1.5 * (1 + 0.00189266831 * em * math.exp(-0.000505 * em)))
+            self.applied_elements[-2:] = []
             pass
 
 

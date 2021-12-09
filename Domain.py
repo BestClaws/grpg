@@ -11,6 +11,8 @@ class Domain:
     def __init__(self, game):
 
         self.game = game
+        self.fbuffs = self.fbuffs or None
+        self.pbuffs = self.pbuffs or None
         
         # stores party charas and party meta data.
         # this should have been self.parties instead and only store the party info
@@ -48,6 +50,10 @@ class Domain:
             chara.set_player(player_name)
             chara.equip_weapon('aquila', 90)
             chara.prepare()
+
+            # apply domain buffs. (maybe do it somewhere else)
+            chara.sm.apply_fbuffs(self.fbuffs)
+            chara.sm.apply_pbuffs(self.pbuffs)
 
             self.players[player_name]['party'].append(chara)
     
