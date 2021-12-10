@@ -1,6 +1,6 @@
 
 def interpolate_stat(stats_table, level):
-    """calculates the stats for intermediate levels not listed in table"""
+    """calculates the stats for intermediate levels not listed in stats table"""
 
     stats_table = {float(k): v for k, v in stats_table.items()}
     
@@ -23,5 +23,5 @@ def interpolate_stat(stats_table, level):
 
     return stat
 
-def get_opponent(party_name):
-    return 'B' if party_name == 'A' else 'A'
+def get_opponent(player_name):
+    return 'B' if player_name == 'A' else 'A'

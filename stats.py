@@ -84,7 +84,8 @@ class StatsManager:
         _base_atk = self.interpolate_stat('Base ATK') + self.chara.weapon.base_atk
         s['ATK'].update((pb['ATK'] + 1) * _base_atk + fb['ATK'])
 
-        s['DEF'] # = ?
+        _base_def = self.interpolate_stat('Base DEF')
+        s['DEF'].update((pb['DEF'] + 1) * _base_def + fb['DEF'])
 
         s['Elemental Mastery'].update2(s['Elemental Mastery'] + fb['Elemental Mastery'])
 
@@ -111,7 +112,7 @@ class StatsManager:
 
 
 
-    def calc_RES(self, element: str):
+    def get_effective_res(self, element: str):
         """return's the character's aggregate RES (includes normal RES too) for given element"""
         return self.stats[element + ' RES']
         

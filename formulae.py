@@ -1,3 +1,6 @@
+# TODO: improve overall naming!!!!
+
+
 from .compute import E
 
 class FormulaeStore:
@@ -5,7 +8,9 @@ class FormulaeStore:
     def __init__(self, chara):
 
 
-        # OUTGOING
+        ############ OUTGOING
+
+
 
         self.chara = chara
 
@@ -15,20 +20,32 @@ class FormulaeStore:
         self.critical_hit = E(0)
         self.dmg_post_crit = self.dmg_post_bonus * ((chara.sm.stats['Crit DMG'] * self.critical_hit) + 1)
 
-        # INCOMING
+
+
+
+        ########### INCOMING
 
         self.dmg_in = E(0)
+        self.attacker_level = E(0)
+        
+        # self.defense_reduction = E(0)
+        # self.def_post_reduction = chara.sm.stats['DEF'] * E.sub(1, self.defense_reduction)
 
-        self.final_res = E(1) #  SHOULD BE UPDATED WHEN TAKING A HIT. FIND A WAY TO ENFORCE THIS.
+        self.dmg_post_def = self.dmg_in * (  
+            E.sub(1, chara.sm.stats['DEF'] / (chara.sm.stats['DEF'] + self.attacker_level * 5 + 500))  
+        )
+
+        # the effective_res for the given element
+        self.effective_res = E(1) #  SHOULD BE UPDATED WHEN TAKING A HIT. FIND A WAY TO ENFORCE THIS.
 
 
-        if self.final_res.val < 0:
-            self.post_res_dmg = self.dmg_in * (-(self.final_res/2) + 1)
-        elif 0 <= self.final_res.val < 0.75:
-            self.post_res_dmg = self.dmg_in * (E.sub(0, self.final_res) + 1)
-        elif self.final_res.val >= 0.75:
-            self.post_res_dmg = self.dmg_in * E.div(1, (self.final_res * 4)+1)
+        if self.effective_res.val < 0:
+            self.dmg_post_res = self.dmg_post_def * E.sub(1, self.effective_res/2) 
+        elif 0 <= self.effective_res.val < 0.75:
+            self.dmg_post_res = self.dmg_post_def * E.sub(1, self.effective_res)
+        elif self.effective_res.val >= 0.75:
+            self.dmg_post_res = self.dmg_post_def * E.div(1, self.effective_res * 4 + 1)
 
         self.amplification = E(1) # MAY BE UPDATED WITH REACTOR.
         
-        self.final_dmg = self.post_res_dmg * self.amplification
+        self.final_dmg = self.dmg_post_res * self.amplification

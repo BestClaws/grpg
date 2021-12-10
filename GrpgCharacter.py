@@ -126,8 +126,11 @@ class GrpgCharacter(GrpgCharacterBase):
         # update incoming dmg
         self.fs.dmg_in.set(dmg_in)
 
+        # update attacker level ( helps calculating defense)
+        self.fs.attacker_level.set(90)
+
         # update final res
-        self.fs.final_res.update(self.sm.calc_RES(elem))
+        self.fs.effective_res.update(self.sm.get_effective_res(elem))
 
         #TODO: do elemental reaction stuff
         self.reactor.react(elem, em)
