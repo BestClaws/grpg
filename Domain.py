@@ -1,4 +1,6 @@
 from copy import deepcopy
+from .clock import clock
+
 
 from .kaeya import Kaeya
 
@@ -11,8 +13,17 @@ class Domain:
     def __init__(self, game):
 
         self.game = game
+
+        # register with clock so @clock.ticker works here
+        clock.register(self)
+
         self.fbuffs = self.fbuffs or None
         self.pbuffs = self.pbuffs or None
+
+
+
+        
+
         
         # stores party charas and party meta data.
         # this should have been self.parties instead and only store the party info
@@ -33,6 +44,8 @@ class Domain:
             "B": deepcopy(player_data)
         }
     
+
+
 
     def add_player(self, player_name, *party):
         """adds a player with given party of characters"""

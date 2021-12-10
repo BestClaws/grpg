@@ -1,5 +1,7 @@
 import logging
 
+from .clock import clock
+
 from .reactions import Reactor
 
 from .compute import E
@@ -31,6 +33,8 @@ class GrpgCharacter(GrpgCharacterBase):
         self.fs = FormulaeStore(self)
         self.reactor = Reactor(self)
 
+        clock.register(self)
+
         
         # player talents' action data.
         self.talent_data = {
@@ -39,7 +43,7 @@ class GrpgCharacter(GrpgCharacterBase):
             'skill': {},
             'burst': {},
             'plunge': {}
-        }
+        } 
 
 
 
@@ -130,7 +134,7 @@ class GrpgCharacter(GrpgCharacterBase):
         self.fs.attacker_level.set(90)
 
         # update final res
-        self.fs.effective_res.update(self.sm.get_effective_res(elem))
+        self.fs.effective_res.equals(self.sm.get_effective_res(elem))
 
         #TODO: do elemental reaction stuff
         self.reactor.react(elem, em)
@@ -173,7 +177,7 @@ class GrpgCharacter(GrpgCharacterBase):
             return True
         return False
 
-
+    @clock.ticker(interval=2, times=5)
     def tick(self):
         """update character state every turn here"""
         logging.info(f"{self}: ticking")

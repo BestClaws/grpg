@@ -79,15 +79,15 @@ class StatsManager:
         i = self.inherent
         
         _base_hp = self.interpolate_stat('Base HP')
-        s['Max HP'].update(E(_base_hp) * (pb['Max HP'] + 1) + fb['Max HP'])
+        s['Max HP'].equals(E(_base_hp) * (pb['Max HP'] + 1) + fb['Max HP'])
         
         _base_atk = self.interpolate_stat('Base ATK') + self.chara.weapon.base_atk
-        s['ATK'].update((pb['ATK'] + 1) * _base_atk + fb['ATK'])
+        s['ATK'].equals((pb['ATK'] + 1) * _base_atk + fb['ATK'])
 
         _base_def = self.interpolate_stat('Base DEF')
-        s['DEF'].update((pb['DEF'] + 1) * _base_def + fb['DEF'])
+        s['DEF'].equals((pb['DEF'] + 1) * _base_def + fb['DEF'])
 
-        s['Elemental Mastery'].update2(s['Elemental Mastery'] + fb['Elemental Mastery'])
+        s['Elemental Mastery'].atler(s['Elemental Mastery'] + fb['Elemental Mastery'])
 
         s['Max Stamina'] # = ?, maybe current stamina should be part of stats? cuz some domains affect that
         

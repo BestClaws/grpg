@@ -7,6 +7,8 @@ from .util import get_opponent
 
 from .zhou import Zhou
 
+from .clock import clock
+
 class Game:
     """Represents and holds the entire state of the game."""
     
@@ -20,6 +22,7 @@ class Game:
 
         self.game_over = False
         self.winner = None
+
 
 
     def pick_domain(self, name):
@@ -51,8 +54,7 @@ class Game:
             self.handle_events()
 
             if self.try_swap_turn():
-                self.domain.tick()
-
+                clock.tick()
             yield
 
         yield

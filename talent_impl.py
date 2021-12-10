@@ -10,7 +10,6 @@ def auto(func):
     def wrapper(self):
         
 
-        print('stop here')
         talent = self.get_talent('auto')
 
         # record auto attack streak (decides the damage multiplier to use)
@@ -34,7 +33,7 @@ def auto(func):
 
         # update dmg bonuses
         new_exp = self.fs.ability_dmg * (self.sm.stats['Physical DMG Bonus'] + 1)
-        self.fs.dmg_post_bonus.update(new_exp)
+        self.fs.dmg_post_bonus.equals(new_exp)
 
 
         # update whether hit was ciritical
@@ -85,7 +84,7 @@ def charge(func):
 
         # update dmg bonuses
         new_exp = self.fs.ability_dmg * (self.sm.stats['Physical DMG Bonus'] + 1)
-        self.fs.dmg_post_bonus.update(new_exp)
+        self.fs.dmg_post_bonus.equals(new_exp)
 
 
         # update whether hit was ciritical

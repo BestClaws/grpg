@@ -6,6 +6,8 @@ from .talent_impl import auto
 from .compute import E
 from .event import Event
 
+from .clock import clock
+
 from .util import get_opponent
 from .GrpgCharacter import GrpgCharacter
 
@@ -67,6 +69,7 @@ class Kaeya(GrpgCharacter):
         }
        
 
+        clock.register(self)
 
         super().__init__(inherent)
 

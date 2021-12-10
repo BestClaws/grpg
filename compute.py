@@ -7,6 +7,16 @@
 
 import warnings
 
+warnings.warn("""
+
+dont equate expressions like x = x + a with `.equals()`,
+that's against maths, use `.alter()` if you really wanna do that
+
+dont equate expressions like x = y + a; where y = x + b  at all.
+neither with `.equals()` or `.alter()`, that's against math too, and also I can't help u
+
+""")
+
 class E:
     """
     E denotes Expression, and evaluates to a scalar (can be `int`, `float`)\n
@@ -140,17 +150,28 @@ class E:
             return str(self.val)
 
 
-    def update(self, e):
-        """updates `E` to a new `E`"""
-        warnings.warn('self@E.update() is dangerous\n\
-            refer compute.py as to why')
-        
-        
+    def equals(self, e):
+        """equates `E` to a new `E`"""
+
+
         self._type = e._type
-        self.children = e.children
         self._val = e._val
 
-    def update2(self, e):
+        
+        if e.children is None: return
+
+        for child in e.children:
+            if child is self:
+                raise Exception("an `E` cannot be updated with `new E`, if `new E` contants that `E` itself\n\
+                    consider using alter()")
+        
+
+        self.children = e.children
+
+    def atler(self, e):
+        """
+        UPDATE MY DESCRIPTION!!!
+        """
         for i in range(len(e.children)):
             if e.children[i] is self:
                 clone = E()
@@ -161,7 +182,7 @@ class E:
                 e.children[i] = clone
 
 
-        self.update(e)
+        self.equals(e)
         
 
     def eq(self):
