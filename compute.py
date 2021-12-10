@@ -171,7 +171,7 @@ class E:
         if self._type == 'sum':
             return '(' + ' + '.join([child.eq() for child in self.children])  + ')'
         if self._type == 'sub':
-            return '(' + ' + '.join([child.eq() for child in self.children])  + ')'
+            return '(' + ' - '.join([child.eq() for child in self.children])  + ')'
         if self._type == 'mul':
             return '(' + ' * '.join([child.eq() for child in self.children])  + ')'
         if self._type == 'div':
