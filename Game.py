@@ -96,7 +96,7 @@ class Game:
             elif e.type == Event.ACTION_SWITCH:
                 player['on_chara'] = e.val
                 
-                # emit focus and blur events for all characters in party.
+                # emit take and leave field events for all characters in party.
                 for i in range(len(player['party'])):
                     if i == player['on_chara']:
                         self.events.append(Event(Event.CHARA_TAKES_FIELD, i))
