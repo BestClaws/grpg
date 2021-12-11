@@ -3,6 +3,7 @@ from .clock import clock
 
 
 from .characters.kaeya import Kaeya
+from .characters.klee import Klee
 
 class Domain:
     """
@@ -56,7 +57,7 @@ class Domain:
         for chara in party:
             # validate team member
             
-            chara = Kaeya(level=90)
+            chara = Klee(level=90)
             chara.set_domain(self)
             chara.set_player(player_name)
             chara.equip_weapon('aquila', 90)
