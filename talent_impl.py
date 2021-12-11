@@ -1,5 +1,6 @@
 #TODO: use functools.wraps for docstring preservation
 
+from .clock import clock
 
 import logging
 from .util import get_opponent
@@ -9,6 +10,13 @@ from .compute import E
 def auto(func):
     def wrapper(self):
         
+        logging.info("registering dot")
+
+        @clock.ticker(interval=1, times=3)
+        def dot():
+            logging.info('dhot!!!!')
+
+
 
         talent = self.get_talent('auto')
 

@@ -69,7 +69,7 @@ class Kaeya(GrpgCharacter):
         }
        
 
-        clock.register(self)
+        
 
         super().__init__(inherent)
 

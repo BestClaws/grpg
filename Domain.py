@@ -14,9 +14,7 @@ class Domain:
 
         self.game = game
 
-        # register with clock so @clock.ticker works here
-        clock.register(self)
-
+       
         self.fbuffs = self.fbuffs or None
         self.pbuffs = self.pbuffs or None
 

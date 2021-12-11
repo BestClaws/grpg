@@ -23,6 +23,7 @@ class Game:
         self.game_over = False
         self.winner = None
 
+        
 
 
     def pick_domain(self, name):
@@ -50,6 +51,13 @@ class Game:
         processes all game events, handles inputs, and makes everything else work
         note: each loop doesnt mean a turn.
         """
+        # reset clock again so tickers that should start immediately get a
+        # chance to tick. the clock.reset() call in Game.__init__() won't 
+        # have done this. since, no tickeres were even created that early.
+        # but it did help in setting the global_tick to 0. so that tickers
+        # registered prior to this call have registered_at set to 0
+        clock.reset() 
+        
         while not self.game_over:
             self.handle_events()
 

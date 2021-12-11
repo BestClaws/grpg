@@ -1,13 +1,81 @@
 import logging
 
+
+
+class Ticker():
+
+    def __init__(self, func, interval, times, registered_at, offset):
+        self.func = func
+        self.interval = interval
+        self.times = times
+        self.registered_at = registered_at
+        self.offset = offset
+
+        self._injected = None
+        self.callable = True
+        self.expired = False
+
+
+    def inject(self, obj):
+
+        self.callable = False
+
+        copy = Ticker(
+            self.func,
+            self.interval,
+            self.times,
+            self.registered_at,
+            self.offset
+        )
+
+        copy._injected = obj
+        setattr(obj, self.func.__name__, copy)
+
+
+        # some tickers may  run immediately after registering.
+        clock.handle_tickers([copy])
+
+        clock.tickers.append(copy)
+
+    
+
+
+    def __call__(self, *args, **kwargs):
+        """
+        Calls the internal callback that the ticker holds.
+        Returns true if function call was succeeded.
+        """
+
+        if not self.callable: return 
+
+        if self._injected is not None:
+            args = (self._injected, *args)
+
+        try:
+            self.func(*args, **kwargs)
+        except TypeError:
+            # some tickers' func require self as argument.
+            # but if self is not yet injected in this ticker
+            # function call would happen without self and gives this error.
+            return False
+        else:
+            return True
+
+
+
 class Clock:
 
     def __init__(self):
 
         self.global_tick = 0
+        self.tickers = []
 
-        self.tickers = [] # m ticker methods
-        self.conc_tickers = [] # m ticker methods x n obj
+ 
+
+    def reset(self):
+        self.global_tick = 0
+        logging.info(f"{'>' * 30} CLOCK RESET: {self.global_tick} {'<' * 30}")
+        self.handle_tickers(self.tickers)
 
 
     def tick(self):
@@ -17,74 +85,75 @@ class Clock:
         all tickers and tokens work based on this tick
         """
         self.global_tick += 1
+        logging.info(f"{'>' * 30} TICK: {self.global_tick} {'<' * 30}")
+        self.handle_tickers(self.tickers)
 
-        # invoke all registered ticker instances.
 
+    def handle_tickers(self, tickers):
+        logging.info("handling ticker(s)")
+
+
+        # remove expired entries
         indexes = []
-
-        for i in range(len(self.conc_tickers)):
-            entry = self.conc_tickers[i]
-        
-
-            if (self.global_tick - entry['registered_at']) % entry['interval'] == 0:
-                entry['times'] -= 1
-                entry['func'](entry['obj'])
-            
-            # mark finished entries.
-            if entry['times'] <= 0:
+        for i in range(len(tickers)):
+            if tickers[i].expired:
                 indexes.append(i)
+                continue
 
-        # remove finished entries
         for index in sorted(indexes, reverse=True):
-            del self.conc_tickers[index]
+            del self.tickers[index]
+
+        
+        for ticker in tickers:
+            # tick
+
+            # if self.global_tick == ticker.registered_at and ticker.offset == 0:
+            #     # if global_tick and registered_at are equal the below if condition
+            #     # will be true, no matter the interval (assuming offset=0)
+            #     return
+
+            tick_diff = self.global_tick - (ticker.registered_at + ticker.offset)
 
 
-    def register(self, obj):
-        """
-        registers a class to be able to use @clock.ticker
-        """
-
-        for ticker in self.tickers:
-            # obj's class and base classes
-            obj_class_tree  = [obj.__class__.__name__, *list(map(lambda base: base.__name__, obj.__class__.__bases__))]
+            if (self.global_tick - tick_diff) % ticker.interval == 0:
+                ran = ticker()
+                if ran: ticker.times -= 1
 
 
-            # check if any of the obj's class or base classes defined this ticker's func
-            match = False
-            for obj_class in obj_class_tree:
-                if obj_class in ticker['func'].__qualname__:
-                    match = True
-                    break
-
-
-            if match:
-                # make sure entry with given (obj, ticker's func) is not already present
-                # may happen when both, a class and it's base class register with clock
-                # ex: Kaeya and GrpgCharacter's __init__() register with clock and GrpgCharacter defines a ticker's func
-                # then ticker's func defiend GrpgCharacter matches  GrpgCharacter's and Kaeya's obj
-                for conc_ticker in self.conc_tickers:
-                    if conc_ticker['func'] is ticker['func'] and conc_ticker['obj'] is obj: return
-
-                logging.info(f"registering <obj: {id(obj)}, class-tree: {obj_class_tree}>, with ticker func defined in <class: {ticker['func'].__qualname__}>")
-
-                self.conc_tickers.append({
-                    'obj': obj,
-                    'registered_at': self.global_tick,
-                    **ticker
-                })
+            # mark finished entries.
+            if ticker.times <= 0:
+                ticker.expired = True
 
 
 
-    def ticker(self, interval=1, times=1000000):
+
+
+
+
+
+    def ticker(self, interval=1, *, times=1000000, offset=0):
         """
         decorator to convert a method into a ticker 
         """
+        logging.info(f"decorating interval: {interval}, times: {times}")
         def decorator(func):
-            self.tickers.append({
-                'func':func,
-                'interval': interval,
-                'times': times
-            })
+            
+
+            ticker = Ticker(
+                func=func,
+                interval=interval,
+                times=times,
+                registered_at=clock.global_tick,
+                offset=offset
+
+            )
+
+            # some tickers may  run immediately after registering.
+            self.handle_tickers([ticker])
+
+            self.tickers.append(ticker)
+            return ticker
+        
         return decorator
 
 

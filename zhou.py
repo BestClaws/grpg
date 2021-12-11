@@ -16,7 +16,7 @@ class Zhou(Domain):
         self.pbuffs = {}
 
         # register with clock so @clock.ticker works here
-        clock.register(self)
+        self.influence.inject(self)
 
         super().__init__(game)
 

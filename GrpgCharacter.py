@@ -33,8 +33,6 @@ class GrpgCharacter(GrpgCharacterBase):
         self.fs = FormulaeStore(self)
         self.reactor = Reactor(self)
 
-        clock.register(self)
-
         
         # player talents' action data.
         self.talent_data = {
@@ -44,7 +42,6 @@ class GrpgCharacter(GrpgCharacterBase):
             'burst': {},
             'plunge': {}
         } 
-
 
 
     def set_player(self, party_name: str):
@@ -70,6 +67,10 @@ class GrpgCharacter(GrpgCharacterBase):
         logging.info(f"{self}: preparing")
         self.sm.prepare()
         self.reset_hp()
+
+        # inject all tickers.
+        self.tick.inject(self)
+        
 
 
 
