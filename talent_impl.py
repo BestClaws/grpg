@@ -89,7 +89,7 @@ def charge(func):
 
         
         # update ability multiplier
-        xer = (talent['DMG'][0] + talent['DMG'][1]) / 100 # normalize
+        xer = sum(talent['DMG']) / 100 # normalize
         self.fs.ability_xer.set(xer)
 
         # update dmg bonuses
