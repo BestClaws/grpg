@@ -2,7 +2,7 @@ from copy import deepcopy
 from .clock import clock
 
 
-from .kaeya import Kaeya
+from .characters.kaeya import Kaeya
 
 class Domain:
     """
