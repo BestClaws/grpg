@@ -10,19 +10,13 @@ from .compute import E
 def auto(func):
     def wrapper(self):
         
-        logging.info("registering dot")
-
-        @clock.ticker(interval=1, times=3)
-        def dot():
-            logging.info('dhot!!!!')
-
-
 
         talent = self.get_talent('auto')
+        data = self.talent_data['auto']
+
 
         # record auto attack streak (decides the damage multiplier to use)
         # TODO: getting interrupted or using other talents should reset the streak.
-        data = self.talent_data['auto']
         if data.get('streak') is None:
             data['streak'] = 0
         else:
@@ -32,8 +26,11 @@ def auto(func):
         #  (1-hit dmg, 2-hit dmg, etc.,)
         mulitplier_list = talent['DMG']
         i = data['streak'] % len(mulitplier_list) 
-        xer = mulitplier_list[i]
+        xer = mulitplier_list[i] / 100 # normalize
         logging.info(f"{self}: invoking auto {i} with dmg scale: {xer}")
+
+
+
 
 
         # update damage multiplier
@@ -51,14 +48,16 @@ def auto(func):
             self.fs.critical_hit.set(0)
 
         # make changes as per required by character
-        func(self)
+        func(self, talent, data)
+
+
 
         # hit the opponent(s)
         opponent_name = get_opponent(self.player_name)
         opponent = self.domain.players[opponent_name]
         chara = opponent['party'][opponent['on_chara']]
         bonk = {
-            'element': 'Cryo',
+            'element': 'Physical',
             'crit': self.fs.critical_hit,
             'dmg': self.fs.dmg_post_crit.val,
             'em': self.sm.stats['Elemental Mastery'].val
@@ -77,6 +76,8 @@ def charge(func):
     def wrapper(self):
 
         talent = self.get_talent('charge')
+        data = self.talent_data['charge']
+
 
         logging.info(f"{self}: invoking charge attack with xer: {talent['DMG']}")
 
@@ -88,7 +89,8 @@ def charge(func):
 
         
         # update ability multiplier
-        self.fs.ability_xer.set(talent['DMG'])
+        xer = (talent['DMG'][0] + talent['DMG'][1]) / 100 # normalize
+        self.fs.ability_xer.set(xer)
 
         # update dmg bonuses
         new_exp = self.fs.ability_dmg * (self.sm.stats['Physical DMG Bonus'] + 1)
@@ -103,7 +105,7 @@ def charge(func):
 
 
         # configure as per character's wish
-        func(self)
+        func(self, talent, data)
 
         # hit the opponent(s)
         opponent_name = get_opponent(self.player_name)
