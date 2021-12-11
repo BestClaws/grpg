@@ -1,6 +1,6 @@
 import logging
 
-
+import warnings
 
 class Ticker():
 
@@ -32,8 +32,6 @@ class Ticker():
         setattr(obj, self.func.__name__, copy)
 
 
-        # some tickers may  run immediately after registering.
-        clock.handle_tickers([copy])
 
         clock.tickers.append(copy)
 
@@ -53,14 +51,30 @@ class Ticker():
 
         try:
             self.func(*args, **kwargs)
-        except TypeError:
+        except TypeError as e:
             # some tickers' func require self as argument.
             # but if self is not yet injected in this ticker
             # function call would happen without self and gives this error.
+            raise Exception(f"error possibly due to :{self.func} requires a `self` argument so not called. also settings this ticker as uncallable") from e
+            self.callable = False
             return False
         else:
             return True
 
+
+    def __str__(self):
+        return (f"(callable: {self.callable}, expired: {self.expired},"
+            + f"interval: {self.interval}, offset: {self.offset},"
+            + f"registered_at: {self.registered_at}, times:{self.times},"
+            + f"_injected: {self._injected}, func: {self.func.__qualname__}")
+
+    def __repr__(self):
+        return (f"(callable: {self.callable}, expired: {self.expired},"
+            + f"interval: {self.interval}, offset: {self.offset},"
+            + f"registered_at: {self.registered_at}, times:{self.times},"
+            + f"_injected: {self._injected}, func: {self.func.__qualname__}")
+
+            
 
 
 class Clock:
@@ -93,29 +107,36 @@ class Clock:
         logging.info("handling ticker(s)")
 
 
-        # remove expired entries
+        # remove expired tickers
         indexes = []
-        for i in range(len(tickers)):
-            if tickers[i].expired:
+        for i, ticker in enumerate(tickers):
+            if ticker.expired:
                 indexes.append(i)
                 continue
 
         for index in sorted(indexes, reverse=True):
             del self.tickers[index]
 
-        
+        # tick all tickers
         for ticker in tickers:
-            # tick
 
-            # if self.global_tick == ticker.registered_at and ticker.offset == 0:
-            #     # if global_tick and registered_at are equal the below if condition
-            #     # will be true, no matter the interval (assuming offset=0)
-            #     return
+            if ticker.interval + ticker.offset == 0:
+            # not supporting because some tickers that want to run immediately
+            # might be methods, to call these methods ticker MUST obtain the self
+            # first. but before self is obtained the self obj should be fully 
+            # prepared. (this means you can't inject self in the obj's __init__
+            # as only a little part of obj is initialized in __init__)
+            # but by not allowing immediate execution  there's atleast a tick
+            # difference between obtaining self via __init__ and  calling the method
+            # and hopefully the self obj was fully initialized.
+                raise Exception('`interval` and `offset` should not cancel out each other\n\
+                    which implies ticker should run immediately, which is not intentionally\n\
+                    supported. call the function being decorated with ticker directly instead.')
 
-            tick_diff = self.global_tick - (ticker.registered_at + ticker.offset)
+            rio = (ticker.registered_at +  ticker.interval + ticker.offset)
+            diff = self.global_tick - rio
 
-
-            if (self.global_tick - tick_diff) % ticker.interval == 0:
+            if diff % ticker.interval == 0 and diff >= 0:
                 ran = ticker()
                 if ran: ticker.times -= 1
 
@@ -123,6 +144,8 @@ class Clock:
             # mark finished entries.
             if ticker.times <= 0:
                 ticker.expired = True
+
+        logging.info("end handling ticker(s)")
 
 
 
@@ -135,7 +158,6 @@ class Clock:
         """
         decorator to convert a method into a ticker 
         """
-        logging.info(f"decorating interval: {interval}, times: {times}")
         def decorator(func):
             
 
@@ -147,9 +169,6 @@ class Clock:
                 offset=offset
 
             )
-
-            # some tickers may  run immediately after registering.
-            self.handle_tickers([ticker])
 
             self.tickers.append(ticker)
             return ticker

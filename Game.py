@@ -24,7 +24,7 @@ class Game:
         self.winner = None
 
         
-
+        clock.reset()
 
     def pick_domain(self, name):
         """select a domain (arena) for the game"""

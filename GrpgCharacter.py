@@ -138,7 +138,7 @@ class GrpgCharacter(GrpgCharacterBase):
         self.fs.effective_res.equals(self.sm.get_effective_res(elem))
 
         #TODO: do elemental reaction stuff
-        self.reactor.react(elem, em)
+        self.reactor.apply(elem, em)
 
 
         # damage taken is above hp, so character dies. also emit event.
@@ -197,37 +197,55 @@ class GrpgCharacter(GrpgCharacterBase):
             raise Exception('Invalid talent_name')
 
         level = self.sm.inherent['Talents'][talent_name]['Level']
-        talent = self.sm.inherent['Talents'][talent_name]
+        talent_with_lvls = self.sm.inherent['Talents'][talent_name]
 
-        data = dict()
-        for k, v in talent.items():
+        talent = dict()
+        for k, v in talent_with_lvls.items():
             if isinstance(v, dict):
-                data[k] = v[level]
+                talent[k] = v[level]
             elif isinstance(v, (int, float, str)):
-                data[k] = v
+                talent[k] = v
 
-        return data
+        return talent
         
     
     #SECTION: ABILITIES
 
     @auto
-    def invoke_auto(self):
+    def invoke_auto(self, talent, data):
         pass
         
     @charge
-    def invoke_charge(self):
-      pass
+    def invoke_charge(self, talent, data):
+        pass
+        
+        # data = self.talent_data['auto']
+
+        # if data.get('dot') is not None:
+        #     logging.info('removing old dot')
+        #     data.get('dot').expired = True
+        #     del data['dot'] 
+
+        # else:
+
+        #     @clock.ticker(interval=1, times=3)
+        #     def dot():
+        #         logging.info('DOT!!!!')
+            
+        #     dot()
+
+        #     data['dot'] = dot
+      
 
     @skill
-    def invoke_skill(self):
+    def invoke_skill(self, talent, data):
         pass
 
     @burst
-    def invoke_burst(self):
+    def invoke_burst(self, talent, data):
         pass
     
     @plunge
-    def invoke_plunge(self):
+    def invoke_plunge(self, talent, data):
         pass
   
