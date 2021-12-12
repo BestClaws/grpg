@@ -108,6 +108,7 @@ class Clock:
 
 
         # remove expired tickers
+        # todo: improve this logic, like its done in reactions.py
         indexes = []
         for i, ticker in enumerate(tickers):
             if ticker.expired:
@@ -183,6 +184,20 @@ class Token:
         self.duration = duration
         self.created_at = clock.global_tick
 
+    def expire(self):
+        self.duration = 0
+        pass
+
+    def refresh(self):
+        self.created_at = clock.global_tick
+
+    @property
+    def expires_in(self):
+        ans = self.created_at + self.duration - clock.global_tick
+        if ans > 0:
+            return ans
+        else:
+            return 0
     
     @property
     def expired(self):
