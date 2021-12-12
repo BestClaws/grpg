@@ -134,11 +134,13 @@ class GrpgCharacter(GrpgCharacterBase):
         # update attacker level ( helps calculating defense)
         self.fs.attacker_level.set(90)
 
-        # update final res
-        self.fs.effective_res.equals(self.sm.get_effective_res(elem))
+        # update final res for given element
+        self.fs.effective_res.equals(
+            self.sm.get_effective_res(elem or 'Physical') # if element is None, assume physical.
+        )
 
         #TODO: do elemental reaction stuff
-        self.reactor.apply(elem, em)
+        if elem is not None: self.reactor.apply(elem, em)
 
 
         # damage taken is above hp, so character dies. also emit event.

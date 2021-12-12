@@ -57,7 +57,7 @@ def auto(func):
         opponent = self.domain.players[opponent_name]
         chara = opponent['party'][opponent['on_chara']]
         bonk = {
-            'element': 'Physical',
+            'element': 'Pyro',
             'crit': self.fs.critical_hit,
             'dmg': self.fs.dmg_post_crit.val,
             'em': self.sm.stats['Elemental Mastery'].val
@@ -112,7 +112,7 @@ def charge(func):
         opponent = self.domain.players[opponent_name]
         for chara in opponent['party']:
             bonk = {
-                'element': 'Pyro',
+                'element': 'Cryo',
                 'crit': self.fs.critical_hit.val,
                 'dmg': self.fs.dmg_post_crit.val,
                 'em': self.sm.stats['Elemental Mastery'].val

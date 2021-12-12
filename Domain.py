@@ -57,7 +57,7 @@ class Domain:
         for chara in party:
             # validate team member
             
-            chara = Klee(level=90)
+            chara = Kaeya(level=90)
             chara.set_domain(self)
             chara.set_player(player_name)
             chara.equip_weapon('aquila', 90)

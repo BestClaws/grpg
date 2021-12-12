@@ -1,34 +1,40 @@
+# core
 import math
-
 import logging
 
+# 1st party
 from .clock import Token, clock
+
+# 3rd party
+
+# type imports
+from typing import List
+
 
 class Reactor:
     def __init__(self, chara):
         self.chara = chara
-        self.applied_elements = []
+        self.applied_elements: List[Element] = []
         self.do_reactions.inject(self)
 
         pass
 
     def apply(self,  elem_type: str, em):
+
+        # clean up expired elements
         self.remove_expired_elems()
 
-        if elem_type == 'Physical':
-            logging.info('not applying physical - not an element')
-            return
         
-        elif elem_type not in [
+        if elem_type not in [
             'Electro', 'Pyro', 'Hydro', 'Cryo', 'Anemo', 'Geo', 'Dendro'
         ]:
             raise Exception("Invalid element applied")
         
-        # remove element if already applied. to apply same elem, but with full life.
+        # refresh element life, if current applying element is same as last applied element
         if self.applied_elements and self.applied_elements[-1].type == elem_type:
-            del self.applied_elements[-1]
-
-        self.applied_elements.append(Element(elem_type, em))
+            self.applied_elements[-1].life.refresh()
+        else:
+            self.applied_elements.append(Element(elem_type, em))
 
 
         self.do_reactions()
@@ -37,11 +43,8 @@ class Reactor:
 
     def remove_expired_elems(self):
         # remove expired elements first.
-        for elem in self.applied_elements:
-            if elem.expired:
-                logging.info(f"removing expired item: {elem}")
-                self.applied_elements.remove(elem)
-
+        unexpired_elems = [elem for elem in self.applied_elements if not elem.expired]
+        self.applied_elements = unexpired_elems
     
     @clock.ticker(interval=1) 
     def do_reactions(self):
@@ -49,95 +52,108 @@ class Reactor:
         performs reactions and outputs 
         
         """
-
+        # remove expired elements first.
         self.remove_expired_elems()
 
+        # walk through each element from left to right and try reacting that element
+        # with all the elements to its left.
+        for i, procing in enumerate(self.applied_elements):
+
+            # ignore elements that might have expired in previous iterations of this loop
+            # ignoring them instead of removing, cuz that'll mess up iteration
+            # (never mutate a list while iterating)
+            procables = [elem for elem in self.applied_elements[:i] if not elem.expired]
+
+            for procable in procables:
+                reaction = Element.data[procing.type]['procs'].get(procable.type)
+                if reaction is None: continue
+                self.deal_reactions(procing, procable, reaction)    
+
+
+        # clean up again.
+        self.remove_expired_elems()
+
+
+
+    def deal_reactions(self, procer, procable, reaction):
         
+        logging.info('dealing with found reactions')
+
+        if reaction == 'vaporize':
+            logging.info('setting vap dmg modifiers.')
+            self.chara.fs.amplification.set(1.5 * (1 + 0.00189266831 * procer.EM * math.exp(-0.000505 * procer.EM)))
+            procer.life.expire()
+            procable.life.expire()
+
+        elif reaction == 'rev vaporize':
+            logging.info('setting rev vap dmg modifiers.')
+            self.chara.fs.amplification.set(2.0 * (1 + 0.00189266831 * procer.EM * math.exp(-0.000505 * procer.EM)))
+
+            procer.life.expire()
+            procable.life.expire()
+
+        if reaction == 'melt':
+            logging.info('setting melt dmg modifiers.')
+            self.chara.fs.amplification.set(2.0 * (1 + 0.00189266831 * procer.EM * math.exp(-0.000505 * procer.EM)))
+            procer.life.expire()
+            procable.life.expire()
 
 
+        if reaction == 'rev melt':
+            logging.info('setting rev melt dmg modifiers.')
+            self.chara.fs.amplification.set(1.5 * (1 + 0.00189266831 * procer.EM * math.exp(-0.000505 * procer.EM)))
+            procer.life.expire()
+            procable.life.expire()
 
+        # implement other reactions here.
 
-        logging.info(f"{self.chara}: doing reactions")
-     
-        # amplifying reactions
-
-        if not self.applied_elements: return
-
-        elem_types = [elem.type for elem in self.applied_elements]
-        EM = self.applied_elements[-1].EM
-
-        if elem_types[-2:] == ['Hydro', 'Pyro']:
-            # vap
-            self.chara.fs.amplification.set(1.5 * (1 + 0.00189266831 * EM * math.exp(-0.000505 * EM)))
-            self.applied_elements[-2:] = []
-            pass
-
-        if elem_types[-2:] == ['Pyro', 'Hydro']:
-            # reverse vap
-            self.chara.fs.amplification.set(2.0 * (1 + 0.00189266831 * EM * math.exp(-0.000505 * EM)))
-            self.applied_elements[-2:] = []
-            pass
-
-        if elem_types[-2:] == ['Cryo', 'Pyro']:
-            # melt
-            self.chara.fs.amplification.set(2.0 * (1 + 0.00189266831 * EM * math.exp(-0.000505 * EM)))
-            self.applied_elements[-2:] = []
-            pass
-
-        if elem_types[-2:] == ['Pyro', 'Cryo']:
-            # rev melt
-            self.chara.fs.amplification.set(1.5 * (1 + 0.00189266831 * EM * math.exp(-0.000505 * EM)))
-            self.applied_elements[-2:] = []
-            pass
-
-
-
-        if set(self.applied_elements[-2:]) == set(['Hydro', 'Electro']):
-            # Electro-charged
-            pass
-
-        if set(self.applied_elements[-2:]) == set(['Electro', 'Pyro']):
-            # overload
-            pass
-
-        if self.applied_elements[-2:] == set(['Cryo', 'Electro']):
-            # superconduct
-            # reduce res
-            pass
-
-        if self.applied_elements[-2:] == set(['Cryo', 'Hydro']):
-            # frozen
-            # reapply Cryo
-            pass
-
-
-        
-        
 
 class Element:
+
+    data = {
+        'Pyro': {
+            'life': 4,
+            'procs': {'Hydro': 'vaporize', 'Cryo': 'melt',  'Anemo': 'swirl', 'Electro': 'overload'},
+        },
+        'Hydro': {
+            'life': 4,
+            'procs': {'Pyro': 'rev vaporize', 'Cryo': 'freeze', 'Anemo': 'swirl'},
+        },
+        'Cryo': {
+            'life': 4,
+            'procs': {'Hydro': 'freeze', 'Pyro': 'rev melt', 'Anemo': 'swirl'},
+        },
+        'Anemo': {
+            'life': 4,
+            'procs': {'Pyro': 'swirl', 'Hydro': 'swirl', 'Cryo': 'swirl', 'Electro': 'swirl'},
+        },
+        'Geo':{
+            'life': 4,
+            'procs': {'Pyro': 'crystallize', 'Hydro': 'crystallize', 'Cryo': 'crystallize', 'Electro': 'crystallize'},
+        },
+        'Electro': {
+            'life': 4,
+            'procs': {'Pryo': 'overload', 'Hydro': 'electrocharged', 'Cryo': 'superconduct'},
+        },
+        'Dendro': {
+            # DENDRO WHEN :peepoSad:
+        }
+    }
+
+
 
     def __init__(self, type, EM=0):
         self.type = type
         self.EM = EM
-        
-        _life_table = {
-            'Pyro': 4,
-            'Hydro': 0,
-            'Cryo': 0,
-            'Anemo': 0,
-            'Geo': 0,
-            'Electro': 0,
-            'Dendro': 0,
-        }
 
-        self.life = Token(_life_table.get(type))
+        self.life = Token(self.__class__.data[type]['life'])
 
     def __str__(self):
-        return f"{self.type}"
+        return f"{self.type}-{self.life.expires_in}"
 
         
     def __repr__(self):
-        return f"{self.type}"
+        return f"{self.type}-{self.life.expires_in}"
 
         
 
