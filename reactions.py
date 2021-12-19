@@ -148,12 +148,7 @@ class Reactor:
 
             procer.life.expire() # anemo goes away.
 
-            procer.fs.t_a.set(-0.0000008854)
-            procer.fs.t_b.set(0.0001679502)
-            procer.fs.t_c.set(0.0103922088)
-            procer.fs.t_d.set(0.3097567417)
-            procer.fs.t_e.set(-1.7733381829)
-            procer.fs.t_f.set(13.5157684329)
+            procer.fs.t_xer.set(1.2)
 
             self.chara.damages.append((
                 'swirl',

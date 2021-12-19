@@ -66,24 +66,15 @@ class FormulaSheet:
         ### TRANSFORMATIVE REACTIONS ------------------------------------------
 
         # transformative constants.
-        self.t_a = E(0)
-        self.t_b = E(0)
-        self.t_c = E(0)
-        self.t_d = E(0)
-        self.t_e = E(0)
-        self.t_f = E(0)
-        
+        self.t_xer = E(0)
+   
 
+        EM_bonus = (self.atkr_EM * 16)/(self.atkr_EM + 2000) + 1
 
-        func_EM = (self.atkr_EM * 60)/(self.atkr_EM * 9 + 12609) + 1
-
-        self.t_dmg = func_EM * (
-            self.t_a * math.pow(self.atkr_lvl, 5)
-            + self.t_b * math.pow(self.atkr_lvl, 4)
-            + self.t_c * math.pow(self.atkr_lvl, 3)
-            + self.t_d * math.pow(self.atkr_lvl, 2)
-            + self.t_e * math.pow(self.atkr_lvl, 1)
-            + self.t_f
+        self.t_dmg = self.t_xer * EM_bonus * ( # 60+ chara only.
+             0.00194 * math.pow(self.atkr_lvl, 3)
+           - 0.319 * math.pow(self.atkr_lvl, 2)
+           + 30.7 * self.atkr_lvl - 868
         )
 
         self.t_dmg_post_res = E(0)
@@ -97,7 +88,7 @@ class FormulaSheet:
         (Exhaustive list: res,)
         """
 
-        # dmg after resistance
+        # dmg after resistance (how tf do i write discountinous functions as expressions)
         if self.res.val < 0:
             self.dmg_post_res.equals(self.dmg_post_def * E.sub(1, self.res/2))
         elif 0 <= self.res.val < 0.75:
@@ -153,12 +144,7 @@ class FormulaSheet:
         new.atkr_lvl.set(self.atkr_lvl.val)
         new.res.set(self.res.val)
 
-        new.t_a.set(self.t_a.val)
-        new.t_b.set(self.t_b.val)
-        new.t_c.set(self.t_c.val)
-        new.t_d.set(self.t_d.val)
-        new.t_e.set(self.t_e.val)
-        new.t_f.set(self.t_f.val)
+        new.t_a.set(self.t_xer.val)
 
         return new
 
