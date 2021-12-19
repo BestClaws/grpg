@@ -112,9 +112,6 @@ class StatsManager:
 
 
 
-    def get_effective_res(self, element: str):
-        """return's the character's aggregate RES (includes normal RES too) for given element"""
-        return self.stats[element + ' RES']
         
 
     def interpolate_stat(self, stat_name):

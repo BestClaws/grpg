@@ -1,11 +1,13 @@
 import logging
 
+from grpg.util import get_opponent
+
 from .clock import clock
 
 from .reactions import Reactor
 
 from .compute import E
-from .formulae import FormulaeStore
+from .formulae import FormulaSheet
 
 from .weapon import Weapon
 from .stats import StatsManager
@@ -30,7 +32,7 @@ class GrpgCharacter(GrpgCharacterBase):
         self.name = self.name or "??"
 
         self.sm = StatsManager(self, inherent)
-        self.fs = FormulaeStore(self)
+        self.fs = FormulaSheet(self)
         self.reactor = Reactor(self)
 
         
@@ -43,6 +45,17 @@ class GrpgCharacter(GrpgCharacterBase):
             'plunge': {}
         } 
 
+    
+
+    def get_party(self):
+        party = self.domain.players[self.player_name]['party']
+        on_chara = self.domain.players[self.player_name]['on_chara']
+        return party, on_chara
+
+    def get_opponent_party(self):
+        party = self.domain.players[get_opponent(self.player_name)]['party']
+        on_chara = self.domain.players[self.player_name]['on_chara']
+        return party, on_chara
 
     def set_player(self, party_name: str):
         """set which party the character belongs to"""
@@ -118,51 +131,57 @@ class GrpgCharacter(GrpgCharacterBase):
 
 
 
-    def take_hit(self, bonk):
+    def take_hit(self, fs):
         """get hit by a bonk """
 
+        fs
 
-
-        elem = bonk['element']
-        em = bonk['em']
-        dmg_in = bonk['dmg']
 
         
         # update incoming dmg
-        self.fs.dmg_in.set(dmg_in)
+        fs.dmg_in.set(fs.dmg_post_crit.val)
 
-        # update attacker level ( helps calculating defense)
-        self.fs.attacker_level.set(90)
+   
 
         # update final res for given element
-        self.fs.effective_res.equals(
-            self.sm.get_effective_res(elem or 'Physical') # if element is None, assume physical.
+        elem = fs.element or 'Physical'
+        fs.res.equals(
+            self.sm.stats[elem + ' RES']
         )
 
+        fs.refresh()
+        self.damages = [(fs.element, fs.final_dmg.val)]
+
         #TODO: do elemental reaction stuff
-        if elem is not None: self.reactor.apply(elem, em)
+        if elem is not None: self.reactor.apply(fs.element, fs)
 
+        self.take_dmg()
 
-        # damage taken is above hp, so character dies. also emit event.
-        if self.fs.final_dmg.val >= self.current_hp:
-            self.alive = False
-            self.domain.game.events.append(Event(Event.CHARA_FALL, self.party_pos))
-            self.current_hp = 0
+    def take_dmg(self):
+        logging.info(f"{self}: taking damages...")
 
-            # see if all party members died and emit game over event
-            game_over = True
-            for chara in self.domain.players[self.player_name]['party']:
-                if chara.alive:
-                    game_over = False
-                    break
-            if game_over:
-                self.domain.game.events.append(Event(Event.GAME_OVER, self.player_name))
-        
-        else:
-            # reduce hp with final dmg
-            self.current_hp = self.current_hp -  self.fs.final_dmg.val
-            logging.info(f"dmg taken: {self.fs.final_dmg.val}, hp: {self.current_hp}/{self.sm.stats['Max HP']} eq: {self.fs.final_dmg.eq()}")
+        for type, dmg in self.damages:
+            
 
+            # damage taken is above hp, so character dies. also emit event.
+            if dmg >= self.current_hp:
+                self.alive = False
+                self.domain.game.events.append(Event(Event.CHARA_FALL, self.party_pos))
+                self.current_hp = 0
+
+                # see if all party members died and emit game over event
+                game_over = True
+                for chara in self.domain.players[self.player_name]['party']:
+                    if chara.alive:
+                        game_over = False
+                        break
+                if game_over:
+                    self.domain.game.events.append(Event(Event.GAME_OVER, self.player_name))
+            
+            else:
+                # reduce hp with final dmg
+                self.current_hp = self.current_hp -  dmg
+                logging.info(f"{self}: took dmg: {dmg}, of type: {type}")
 
 
     def equip_weapon(self, name, level):

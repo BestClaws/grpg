@@ -5,7 +5,10 @@
 - amplificative reactions
 - DEF mechanics (done)
 - RES mechanics (done)
-
+- electro hydro electro < fix this.
+- question: what happens if hydro electro cryo
+- question: hydro electro swirl
+- question: when zhongli reduces resistance, will it also reduce resistance against transformative attacks?
 - transformative reactions 
 
 
@@ -16,6 +19,8 @@
 
 
 # long run
+- guage unit theory for elements ( bruh this is so complicated and 
+  unnecessary for a simple game like this.)
 - food buffs
 - weapon passive support
 - artifacts 4pc support

@@ -7,20 +7,20 @@ from .clock import Token, clock
 
 # 3rd party
 
-# type imports
+# types
 from typing import List
 
 
 class Reactor:
+
     def __init__(self, chara):
         self.chara = chara
         self.applied_elements: List[Element] = []
         self.do_reactions.inject(self)
 
-        pass
 
-    def apply(self,  elem_type: str, em):
-
+    def apply(self,  elem_type: str, fs):
+        # TODO: accept an element instead of elem_type
         # clean up expired elements
         self.remove_expired_elems()
 
@@ -34,7 +34,7 @@ class Reactor:
         if self.applied_elements and self.applied_elements[-1].type == elem_type:
             self.applied_elements[-1].life.refresh()
         else:
-            self.applied_elements.append(Element(elem_type, em))
+            self.applied_elements.append(Element(elem_type, fs))
 
 
         self.do_reactions()
@@ -43,7 +43,11 @@ class Reactor:
 
     def remove_expired_elems(self):
         # remove expired elements first.
-        unexpired_elems = [elem for elem in self.applied_elements if not elem.expired]
+        unexpired_elems = []
+        for elem in self.applied_elements:
+            if not elem.expired: unexpired_elems.append(elem)
+            else: logging.info(f"{elem} expired")
+
         self.applied_elements = unexpired_elems
     
     @clock.ticker(interval=1) 
@@ -52,6 +56,8 @@ class Reactor:
         performs reactions and outputs 
         
         """
+
+        logging.info(f"{self.chara} doing reactions")
         # remove expired elements first.
         self.remove_expired_elems()
 
@@ -76,34 +82,86 @@ class Reactor:
 
 
     def deal_reactions(self, procer, procable, reaction):
+
+        # TODO: fs might be empty. or rather make sure its not empty.
+        # when swirl spreads elements, it apply element on others. then the character
+        # spreading the element becomes the attacker. so `self.chara`'s formula sheet should be used.
         
         logging.info('dealing with found reactions')
 
         if reaction == 'vaporize':
             logging.info('setting vap dmg modifiers.')
-            self.chara.fs.amplification.set(1.5 * (1 + 0.00189266831 * procer.EM * math.exp(-0.000505 * procer.EM)))
+
+            procer.fs.a_factor.set(1.5)
             procer.life.expire()
             procable.life.expire()
 
-        elif reaction == 'rev vaporize':
+            self.chara.damages[0] = (
+                'vaporize',
+                procer.fs.t_dmg_post_res.val
+            )
+        
+
+        elif reaction == 'reverse vaporize':
             logging.info('setting rev vap dmg modifiers.')
-            self.chara.fs.amplification.set(2.0 * (1 + 0.00189266831 * procer.EM * math.exp(-0.000505 * procer.EM)))
-
+           
+            procer.fs.a_factor.set(2.0)
             procer.life.expire()
             procable.life.expire()
+
+            self.chara.damages[0] = (
+                'vaporize',
+                procer.fs.t_dmg_post_res.val
+            )
+        
 
         if reaction == 'melt':
             logging.info('setting melt dmg modifiers.')
-            self.chara.fs.amplification.set(2.0 * (1 + 0.00189266831 * procer.EM * math.exp(-0.000505 * procer.EM)))
+
+            procer.fs.a_factor.set(2.0)
             procer.life.expire()
             procable.life.expire()
 
+            self.chara.damages[0] = (
+                'melt',
+                procer.fs.dmg_post_res.val
+            )
+        
 
-        if reaction == 'rev melt':
+
+        if reaction == 'reverse melt':
             logging.info('setting rev melt dmg modifiers.')
-            self.chara.fs.amplification.set(1.5 * (1 + 0.00189266831 * procer.EM * math.exp(-0.000505 * procer.EM)))
+
+            procer.fs.a_factor.set(1.5)        
             procer.life.expire()
             procable.life.expire()
+
+            self.chara.damages[0] = (
+                'melt',
+                procer.fs.t_dmg_post_res.val
+            )
+
+        
+        
+        if reaction == 'swirl':
+            logging.info('settings swirling')
+
+            procer.life.expire() # anemo goes away.
+
+            procer.fs.t_a.set(-0.0000008854)
+            procer.fs.t_b.set(0.0001679502)
+            procer.fs.t_c.set(0.0103922088)
+            procer.fs.t_d.set(0.3097567417)
+            procer.fs.t_e.set(-1.7733381829)
+            procer.fs.t_f.set(13.5157684329)
+
+            self.chara.damages.append((
+                'swirl',
+                procer.fs.t_dmg_post_res.val
+            ))
+        
+
+
 
         # implement other reactions here.
 
@@ -113,22 +171,42 @@ class Element:
     data = {
         'Pyro': {
             'life': 4,
-            'procs': {'Hydro': 'vaporize', 'Cryo': 'melt',  'Anemo': 'swirl', 'Electro': 'overload'},
+            'procs': {'Hydro': 'vaporize', 'Cryo': 'melt', 'Electro': 'overload'},
         },
         'Hydro': {
             'life': 4,
-            'procs': {'Pyro': 'rev vaporize', 'Cryo': 'freeze', 'Anemo': 'swirl'},
+            'procs': {'Pyro': 'reverse vaporize', 'Cryo': 'freeze'},
         },
         'Cryo': {
             'life': 4,
-            'procs': {'Hydro': 'freeze', 'Pyro': 'rev melt', 'Anemo': 'swirl'},
+            'procs': {'Hydro': 'freeze', 'Pyro': 'reverse melt',},
         },
         'Anemo': {
-            'life': 4,
+            # 0 as life wont work as 0 as life means its the created token is expired instantly when its created.
+
+            # assuming self.applied_elements is not being externally modified. anemo and geo lifes as 1 makes sense
+            # since as as soon as adding them to applied_elements. via apply(), they're sent to do_reactions()
+            # for procesing and immediately to deal_reactions() which deals with geo/anemo. and immediately expires it
+            # so hopefully. these elements dont linger around (as they are'nt supposed to stay applied on player aka. "aura")
+
+            # no matter if loads of elements are applied to a character from multiple places. they all have to go through
+            # apply() which makes sure anemo/geo are expired. immediately after processing them. and then these expired
+            # items are subsequently removed.
+
+            # and in worst case scenario (will probably never happen, but fix it, if it does.)
+            # the element(geo/anemo) does manage to linger (meaning remains in self.applied_elements)
+            # it will be removed at the next tick. so if player turns swaps the lingered elem wont show in ui
+
+            # but if player switches character, the ui updates which will show anemo/geo as lingering element, since
+            # switching character wont tick the clock
+
+            'life': 1,
+           
+            
             'procs': {'Pyro': 'swirl', 'Hydro': 'swirl', 'Cryo': 'swirl', 'Electro': 'swirl'},
         },
         'Geo':{
-            'life': 4,
+            'life': 1,
             'procs': {'Pyro': 'crystallize', 'Hydro': 'crystallize', 'Cryo': 'crystallize', 'Electro': 'crystallize'},
         },
         'Electro': {
@@ -142,9 +220,11 @@ class Element:
 
 
 
-    def __init__(self, type, EM=0):
+    def __init__(self, type, fs=None):
+        
         self.type = type
-        self.EM = EM
+        self.fs = fs
+        
 
         self.life = Token(self.__class__.data[type]['life'])
 
@@ -160,3 +240,6 @@ class Element:
     @property
     def expired(self):
         return self.life.expired
+
+        
+

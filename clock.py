@@ -1,5 +1,11 @@
 import logging
 
+
+
+from colorama import Fore, Back
+clrbeg = f"{Back.LIGHTBLUE_EX}{Fore.BLACK}"
+clrend = f"{Fore.RESET}{Back.RESET}"
+
 import warnings
 
 class Ticker():
@@ -88,7 +94,7 @@ class Clock:
 
     def reset(self):
         self.global_tick = 0
-        logging.info(f"{'>' * 30} CLOCK RESET: {self.global_tick} {'<' * 30}")
+        logging.info(f"{clrbeg}{'>' * 30} CLOCK RESET: {self.global_tick} {'<' * 30}{clrend}")
         self.handle_tickers(self.tickers)
 
 
@@ -99,7 +105,7 @@ class Clock:
         all tickers and tokens work based on this tick
         """
         self.global_tick += 1
-        logging.info(f"{'>' * 30} TICK: {self.global_tick} {'<' * 30}")
+        logging.info(f"{clrbeg}{'>' * 30} TICK: {self.global_tick} {'<' * 30}{clrend}")
         self.handle_tickers(self.tickers)
 
 

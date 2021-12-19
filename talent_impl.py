@@ -27,25 +27,28 @@ def auto(func):
         mulitplier_list = talent['DMG']
         i = data['streak'] % len(mulitplier_list) 
         xer = mulitplier_list[i] / 100 # normalize
-        logging.info(f"{self}: invoking auto {i} with dmg scale: {xer}")
+        logging.info(f"{self}: invoking auto {i} with dmg multiplier: {xer}")
 
 
+
+        fs = self.fs.copy()
+        fs.element = 'Anemo'
 
 
 
         # update damage multiplier
-        self.fs.ability_xer.set(xer)
+        fs.talent_xer.set(xer)
 
         # update dmg bonuses
-        new_exp = self.fs.ability_dmg * (self.sm.stats['Physical DMG Bonus'] + 1)
-        self.fs.dmg_post_bonus.equals(new_exp)
+        new_exp = fs.talent_dmg * (self.sm.stats['Physical DMG Bonus'] + 1)
+        fs.dmg_post_bonus.equals(new_exp)
 
 
         # update whether hit was ciritical
         if self.sm.stats['Crit Rate'].val > random.random():
-            self.fs.critical_hit.set(1)
+            fs.critical_hit.set(1)
         else:
-            self.fs.critical_hit.set(0)
+            fs.critical_hit.set(0)
 
         # make changes as per required by character
         func(self, talent, data)
@@ -56,16 +59,12 @@ def auto(func):
         opponent_name = get_opponent(self.player_name)
         opponent = self.domain.players[opponent_name]
         chara = opponent['party'][opponent['on_chara']]
-        bonk = {
-            'element': 'Pyro',
-            'crit': self.fs.critical_hit,
-            'dmg': self.fs.dmg_post_crit.val,
-            'em': self.sm.stats['Elemental Mastery'].val
-            }
-
-        logging.info(f"{self} outgoing {'a crit ' if bonk['crit'] else ''} hit with {bonk['dmg']}, exp: {self.fs.dmg_post_crit.eq()}")
         
-        chara.take_hit(bonk)
+    
+
+        logging.info(f"{self} outgoing {'a crit ' if fs.critical_hit.val else ''} hit with {fs.dmg_post_crit.val}, exp: {fs.dmg_post_crit.eq()}")
+        
+        chara.take_hit(fs)
         pass
     return wrapper
 
@@ -87,21 +86,23 @@ def charge(func):
         self.current_stamina -= talent['Stamina Cost']
 
 
+        fs = self.fs.copy()
+        fs.element = 'Cryo'
         
         # update ability multiplier
         xer = sum(talent['DMG']) / 100 # normalize
-        self.fs.ability_xer.set(xer)
+        fs.talent_xer.set(xer)
 
         # update dmg bonuses
-        new_exp = self.fs.ability_dmg * (self.sm.stats['Physical DMG Bonus'] + 1)
-        self.fs.dmg_post_bonus.equals(new_exp)
+        new_exp = fs.talent_dmg * (self.sm.stats['Physical DMG Bonus'] + 1)
+        fs.dmg_post_bonus.equals(new_exp)
 
 
         # update whether hit was ciritical
         if self.sm.stats['Crit Rate'].val > random.random():
-            self.fs.critical_hit.set(1)
+            fs.critical_hit.set(1)
         else:
-            self.fs.critical_hit.set(0)
+            fs.critical_hit.set(0)
 
 
         # configure as per character's wish
@@ -111,15 +112,12 @@ def charge(func):
         opponent_name = get_opponent(self.player_name)
         opponent = self.domain.players[opponent_name]
         for chara in opponent['party']:
-            bonk = {
-                'element': 'Cryo',
-                'crit': self.fs.critical_hit.val,
-                'dmg': self.fs.dmg_post_crit.val,
-                'em': self.sm.stats['Elemental Mastery'].val
-            }
+          
+
+            logging.info(f"{self} outgoing {'a crit ' if fs.critical_hit.val else ''} hit with {fs.dmg_post_crit.val}, exp: {fs.dmg_post_crit.eq()}")
             
-            logging.info(f"{self} outgoing {'a crit ' if bonk['crit'] else ''} hit with {bonk['dmg']}, exp: {self.fs.dmg_post_crit.eq()}")
-            chara.take_hit(bonk)
+            chara.take_hit(fs)
+            
  
     return wrapper
 
