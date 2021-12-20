@@ -10,7 +10,7 @@
 - question: hydro electro swirl
 - question: when zhongli reduces resistance, will it also reduce resistance against transformative attacks?
 - transformative reactions 
-
+- make claymores somehow slow.
 
 
 # desirable

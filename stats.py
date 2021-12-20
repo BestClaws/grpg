@@ -48,7 +48,7 @@ class StatsManager:
             'Dendro DMG Bonus': E(0),
             'Dendro RES': E(0),
             'Electro DMG Bonus': E(0),
-            'Electo RES': E(0),
+            'Electro RES': E(0),
             'Anemo DMG Bonus': E(0),
             'Anemo RES': E(0),
             'Cryo DMG Bonus': E(0),

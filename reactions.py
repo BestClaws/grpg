@@ -1,11 +1,11 @@
 # core
-import math
 import logging
 
 # 1st party
 from .clock import Token, clock
 
 # 3rd party
+...
 
 # types
 from typing import List
@@ -73,7 +73,7 @@ class Reactor:
             for procable in procables:
                 reaction = Element.data[procing.type]['procs'].get(procable.type)
                 if reaction is None: continue
-                self.deal_reactions(procing, procable, reaction)    
+                self.deal_reactions(procing, procable, reaction)    # taking this function out might help with simultaneously doing reactions with multiple characters. (ignore if you don't remember)
 
 
         # clean up again.
@@ -92,10 +92,21 @@ class Reactor:
         if reaction == 'vaporize':
             logging.info('setting vap dmg modifiers.')
 
+            # reaction modifier (amp)
             procer.fs.a_factor.set(1.5)
+
+            # expire elements.
             procer.life.expire()
             procable.life.expire()
 
+
+            # setup pyro res.
+            procer.fs.res.equals(
+                self.sm.stats['Pyro RES']
+            )
+            procer.fs.refresh()
+
+            # add dmg to list of damages
             self.chara.damages[0] = (
                 'vaporize',
                 procer.fs.t_dmg_post_res.val
@@ -104,11 +115,22 @@ class Reactor:
 
         elif reaction == 'reverse vaporize':
             logging.info('setting rev vap dmg modifiers.')
-           
+
+            # reaction modifier (amp)
             procer.fs.a_factor.set(2.0)
+
+            # expire elements.
             procer.life.expire()
             procable.life.expire()
 
+
+            # setup hydro res.
+            procer.fs.res.equals(
+                self.sm.stats['Hydro RES']
+            )
+            procer.fs.refresh()
+
+            # add dmg to list of damages
             self.chara.damages[0] = (
                 'vaporize',
                 procer.fs.t_dmg_post_res.val
@@ -118,10 +140,21 @@ class Reactor:
         if reaction == 'melt':
             logging.info('setting melt dmg modifiers.')
 
+            # reaction modifier (amp)
             procer.fs.a_factor.set(2.0)
+
+            # expire elements.
             procer.life.expire()
             procable.life.expire()
 
+
+            # setup pyro res.
+            procer.fs.res.equals(
+                self.sm.stats['Pyro RES']
+            )
+            procer.fs.refresh()
+
+            # add dmg to list of damages.
             self.chara.damages[0] = (
                 'melt',
                 procer.fs.dmg_post_res.val
@@ -131,25 +164,47 @@ class Reactor:
 
         if reaction == 'reverse melt':
             logging.info('setting rev melt dmg modifiers.')
+            
+            # reaction modifier (amp)
+            procer.fs.a_factor.set(1.5) 
 
-            procer.fs.a_factor.set(1.5)        
+            # expire elements.       
             procer.life.expire()
             procable.life.expire()
 
+
+            # setup cryo res.
+            procer.fs.res.equals(
+                self.sm.stats['Cryo RES']
+            )
+            procer.fs.refresh()
+
+            # add dmg to list of damages
             self.chara.damages[0] = (
                 'melt',
                 procer.fs.t_dmg_post_res.val
             )
 
         
+        if reaction == 'overload':
+            logging.info(f"{self}: overload occurs")
+
+            # oreaction modifier
+            procer.fs.t_xer.set(4)
+
+            # both elements expires
+            procer.life.expire()
+            procable.life.expire()
         
-        if reaction == 'swirl':
-            logging.info('settings swirling')
 
-            procer.life.expire() # anemo goes away.
 
-            procer.fs.t_xer.set(1.2)
-
+            # setup pyro res.
+            procer.fs.res.equals(
+                self.sm.stats['Pyro RES']
+            )
+            procer.fs.refresh()
+            
+            # add dmg to list of damages
             self.chara.damages.append((
                 'swirl',
                 procer.fs.t_dmg_post_res.val
@@ -157,9 +212,66 @@ class Reactor:
         
 
 
+        if reaction == 'swirl':
+            logging.info('settings swirling')
 
-        # implement other reactions here.
 
+            # oreaction modifier
+            procer.fs.t_xer.set(1.2)
+
+            # anemo goes away.
+            anemo = filter(lambda elem: elem.type == 'Anemo', [procer, procable])[0]
+            anemo.life.expire()
+
+
+            # setup anemo res.
+            procer.fs.res.equals(
+                self.sm.stats['Anemo RES']
+            )
+            procer.fs.refresh()
+
+            # add dmg to list of damages
+            self.chara.damages.append((
+                'swirl',
+                procer.fs.t_dmg_post_res.val
+            ))
+        
+        if reaction == 'superconduct':
+            logging.info(f"{self}: superconduct occurs")
+
+
+            # both elements expires
+            procer.life.expire()
+            procable.life.expire()
+        
+
+            # superconduct does aoe dmg
+            party, _ = self.chara.get_party()
+            for chara in party:
+                
+                # get new formula sheet of chara
+                fs = chara.fs.copy()
+
+                # set reaction modifier
+                fs.t_xer.set(1)
+
+                # setup cryo res.
+                fs.res.equals(
+                    chara.sm.stats['Cryo RES']
+                )
+                fs.refresh()
+                
+                # add dmg to list of damages
+                chara.damages.append((
+                    'superconduct',
+                    fs.t_dmg_post_res.val
+                ))
+
+            # reduce defense of x ticks for self.chara
+
+
+        # electrocharged
+        # shattered
 
 class Element:
 

@@ -1,17 +1,17 @@
-import logging
-import random
-import os
-import json
+# core
+...
 
-from ..talent_impl import auto
-
-from ..compute import E
-from ..event import Event
-
-from ..clock import clock
-
-from ..util import get_opponent
+# 1st party
+from ..talent_impl import auto, charge
 from ..GrpgCharacter import GrpgCharacter
+
+
+# 3rd party
+...
+
+# typings
+...
+
 
 
 class Klee(GrpgCharacter):
@@ -384,3 +384,26 @@ class Klee(GrpgCharacter):
 
         super().__init__(inherent)
 
+
+    @auto
+    def invoke_auto(self, talent, data, fs):
+        
+        # set pyro as element. (klee's auto does pyro dmg)
+        fs.element = 'Electro'
+
+
+        # include pyro dmg bonus    
+        fs.dmg_post_bonus.equals(
+            fs.talent_dmg * (self.sm.stats['Pyro DMG Bonus'] + 1)    
+        )
+
+    @charge
+    def invoke_charge(self, talent, data, fs):
+
+        # set pyro as element. (klee's charge does pyro dmg)
+        # fs.element = 'Pyro'
+
+        # include pyro dmg bonus    
+        fs.dmg_post_bonus.equals(
+            fs.talent_dmg * (self.sm.stats['Pyro DMG Bonus'] + 1)    
+        )

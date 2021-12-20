@@ -11,7 +11,7 @@ class FormulaSheet:
 
         
         self.chara = chara
-        self.element = 'Physical'
+        self.element = None
 
         ########################################################################
         # OUTGOING

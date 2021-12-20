@@ -48,32 +48,28 @@ class Domain:
 
 
 
-    def add_player(self, player_name, *party):
+    def add_player(self, player_name, chara_name, chara_level, wep_name, wep_level):
         """adds a player with given party of characters"""
 
         if player_name not in ['A', 'B']:
             raise Exception("invalid party_name name")
 
+        
+        Chara = get_chara(chara_name)
+                
+        chara = Chara(chara_level)
+        chara.set_domain(self)
+        chara.set_player(player_name)
+        chara.equip_weapon(wep_name, wep_level)
+        chara.prepare()
+
+        # apply domain buffs. (maybe do it somewhere else)
+        chara.sm.apply_fbuffs(self.fbuffs)
+        chara.sm.apply_pbuffs(self.pbuffs)
+
+        self.players[player_name]['party'].append(chara)
 
 
-        for chara_name in party:
-            # validate team member
-            
-            Chara = get_chara(chara_name)
-            
-            chara = Chara(level=90)
-            chara.set_domain(self)
-            chara.set_player(player_name)
-            chara.equip_weapon('aquila', 90)
-            chara.prepare()
-
-            # apply domain buffs. (maybe do it somewhere else)
-            chara.sm.apply_fbuffs(self.fbuffs)
-            chara.sm.apply_pbuffs(self.pbuffs)
-
-            self.players[player_name]['party'].append(chara)
-    
-    
 
 def get_domain(domain_name):
     

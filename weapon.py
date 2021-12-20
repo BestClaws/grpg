@@ -8,6 +8,8 @@ from .util import interpolate_stat
 
 
 class Weapon:
+    # TODO: make this same as domain and character in future.
+    # each wep should have its own class. but now its overkill
     def __init__(self, name, level):
         
         weps_file = os.path.join(os.path.dirname(__file__), 'weapons_list.json')
@@ -25,6 +27,7 @@ class Weapon:
 
     @property
     def base_atk(self):
+        # TODO: why calculate every time .bruh
         """returns the Base ATK of the weapon"""    
         table = {k: v for k, v in self.data['Base ATK'].items()}
         return interpolate_stat(table, self.level)

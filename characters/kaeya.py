@@ -1,9 +1,4 @@
-import logging
-import random
-import os
-import json
-
-from ..talent_impl import auto
+from ..talent_impl import auto, charge, plunge, skill, burst
 
 from ..compute import E
 from ..event import Event
@@ -380,3 +375,22 @@ class Kaeya(GrpgCharacter):
         }
 
         super().__init__(inherent)
+
+
+
+    @auto
+    def invoke_auto(self, talent, data, fs):
+        
+        fs.element = 'Cryo'
+
+        # include physical dmg bonus    
+        new_exp = fs.talent_dmg * (self.sm.stats['Physical DMG Bonus'] + 1)
+        fs.dmg_post_bonus.equals(new_exp)
+
+
+    @charge
+    def invoke_charge(self, talent, data, fs):
+
+        # include physical dmg bonus    
+        new_exp = fs.talent_dmg * (self.sm.stats['Physical DMG Bonus'] + 1)
+        fs.dmg_post_bonus.equals(new_exp)

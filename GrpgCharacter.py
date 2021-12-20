@@ -39,6 +39,8 @@ class GrpgCharacter(GrpgCharacterBase):
         self.fs = FormulaSheet(self)
         self.reactor = Reactor(self)
 
+        self.damages = []
+
         
         # player talents' action data.
         self.talent_data = {
@@ -139,26 +141,24 @@ class GrpgCharacter(GrpgCharacterBase):
     def take_hit(self, fs):
         """get hit by a bonk """
 
-        fs
-
-
-        
-        # update incoming dmg
+    
+        # set incoming dmg
         fs.dmg_in.set(fs.dmg_post_crit.val)
 
    
-
-        # update final res for given element
+        # update res for incoming element
         elem = fs.element or 'Physical'
         fs.res.equals(
             self.sm.stats[elem + ' RES']
         )
-
         fs.refresh()
-        self.damages = [(fs.element, fs.final_dmg.val)]
+
+        # add damage to list of damages.        
+        self.damages = [(elem, fs.final_dmg.val)]
+
 
         #TODO: do elemental reaction stuff
-        if elem is not None: self.reactor.apply(fs.element, fs)
+        if fs.element is not None: self.reactor.apply(fs.element, fs)
 
 
         self.take_dmg()
@@ -195,6 +195,7 @@ class GrpgCharacter(GrpgCharacterBase):
 
     def equip_weapon(self, name, level):
         """equips a weapon of given name and level"""
+        logging.info(f"{self}: equipping wep: {name}, level: {level}")
         self.weapon = Weapon(name, level)
 
         # inherit its buffs
@@ -242,11 +243,11 @@ class GrpgCharacter(GrpgCharacterBase):
     #SECTION: ABILITIES
 
     @auto
-    def invoke_auto(self, talent, data):
+    def invoke_auto(self, talent, data, fs):
         pass
         
     @charge
-    def invoke_charge(self, talent, data):
+    def invoke_charge(self, talent, data, fs):
         pass
         
         # data = self.talent_data['auto']
