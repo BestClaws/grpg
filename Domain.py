@@ -1,9 +1,11 @@
 from copy import deepcopy
 from .clock import clock
 
+from importlib import import_module
 
-from .characters.kaeya import Kaeya
-from .characters.klee import Klee
+from thefuzz import process as fuzz_process
+
+from .GrpgCharacter import get_chara
 
 class Domain:
     """
@@ -54,10 +56,12 @@ class Domain:
 
 
 
-        for chara in party:
+        for chara_name in party:
             # validate team member
             
-            chara = Kaeya(level=90)
+            Chara = get_chara(chara_name)
+            
+            chara = Chara(level=90)
             chara.set_domain(self)
             chara.set_player(player_name)
             chara.equip_weapon('aquila', 90)
@@ -70,3 +74,15 @@ class Domain:
             self.players[player_name]['party'].append(chara)
     
     
+
+def get_domain(domain_name):
+    
+    # fetch names from domains/ dir instead?
+    valid_names = ['Zhou']
+
+    domain_name, _certainity = fuzz_process.extractOne(domain_name, valid_names)
+    # make sure certainity is high.
+
+    domain_mod = import_module(f".domains.{domain_name}",  __package__)
+    domain_class = getattr(domain_mod, domain_name)
+    return domain_class

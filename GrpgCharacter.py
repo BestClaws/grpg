@@ -17,6 +17,10 @@ from .GrpgCharacterBase import GrpgCharacterBase
 from .talent_impl import auto, charge, skill, burst, plunge
 
 
+from thefuzz import process as fuzz_process
+from importlib import import_module
+
+
 class GrpgCharacter(GrpgCharacterBase):
 
     def __init__(self, inherent):
@@ -83,6 +87,7 @@ class GrpgCharacter(GrpgCharacterBase):
 
         # inject all tickers.
         self.tick.inject(self)
+        self.take_dmg.inject(self)
         
 
 
@@ -155,8 +160,10 @@ class GrpgCharacter(GrpgCharacterBase):
         #TODO: do elemental reaction stuff
         if elem is not None: self.reactor.apply(fs.element, fs)
 
+
         self.take_dmg()
 
+    @clock.ticker(interval=1, when='end')
     def take_dmg(self):
         logging.info(f"{self}: taking damages...")
 
@@ -183,6 +190,8 @@ class GrpgCharacter(GrpgCharacterBase):
                 self.current_hp = self.current_hp -  dmg
                 logging.info(f"{self}: took dmg: {dmg}, of type: {type}")
 
+
+        self.damages.clear()
 
     def equip_weapon(self, name, level):
         """equips a weapon of given name and level"""
@@ -270,3 +279,16 @@ class GrpgCharacter(GrpgCharacterBase):
     def invoke_plunge(self, talent, data):
         pass
   
+
+
+def get_chara(chara_name):
+    
+    # fetch names from characters/ dir instead?
+    valid_names = ['Klee', 'Kaeya']
+
+    chara_name, _certainity = fuzz_process.extractOne(chara_name, valid_names)
+    # make sure certainity is high.
+
+    chara_mod = import_module(f".characters.{chara_name}",  __package__)
+    chara_class = getattr(chara_mod, chara_name)
+    return chara_class

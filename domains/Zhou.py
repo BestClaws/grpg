@@ -1,9 +1,7 @@
 import logging
-from typing import List
-from .GrpgCharacter import GrpgCharacter
 
-from .domain import Domain
-from .clock import clock
+from ..domain import Domain
+from ..clock import clock
 
 class Zhou(Domain):
 

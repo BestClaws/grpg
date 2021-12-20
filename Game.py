@@ -5,7 +5,7 @@ from collections import deque
 from .event import Event
 from .util import get_opponent
 
-from .zhou import Zhou
+from .domain import get_domain
 
 from .clock import clock
 
@@ -13,7 +13,7 @@ class Game:
     """Represents and holds the entire state of the game."""
     
     def __init__(self):
-        logging.info("starting game")
+        logging.info("setting up a game...")
         self.player = "A"
 
         self.domain = None
@@ -23,12 +23,13 @@ class Game:
         self.game_over = False
         self.winner = None
 
-        
         clock.reset()
+
 
     def pick_domain(self, name):
         """select a domain (arena) for the game"""
-        self.domain = Zhou(self)
+        domain = get_domain(name)
+        self.domain = domain(self)
 
 
 
