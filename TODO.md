@@ -11,7 +11,8 @@
 - question: when zhongli reduces resistance, will it also reduce resistance against transformative attacks?
 - transformative reactions 
 - make claymores somehow slow.
-
+- charged attacks dont do anything. but affect next turn.
+- skill hold feature where?
 
 # desirable
 - artifacts 2pc support

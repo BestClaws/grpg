@@ -16,13 +16,15 @@ from ..GrpgCharacter import GrpgCharacter
 
 class Klee(GrpgCharacter):
 
-    def __init__(self, level=1):
+    def __init__(self, levels=(90,8,8,8)):
 
         self.name = "Klee"
-        # inherent parameters, not tweakable.
 
+        chara_level, auto_level, skill_level, burst_level = levels
+
+        # inherent parameters, not tweakable.
         inherent = {
-            "Level": level,
+            "Level": chara_level,
             "Stats": {
                 "Base HP": {
                     1: 801,
@@ -117,7 +119,6 @@ class Klee(GrpgCharacter):
             },
             "Talents": {
                 "auto": {
-                    "Level": 10,
                     "DMG": {
                         1: [
                             72.16,
@@ -189,10 +190,10 @@ class Klee(GrpgCharacter):
                             144.27,
                             207.9
                         ]
-                    }
+                    },
+                    "Level": auto_level,
                 },
                 "charge": {
-                    "Level": 10,
                     "DMG": {
                         1: [157.36],
                         2: [169.16],
@@ -224,10 +225,10 @@ class Klee(GrpgCharacter):
                         12: 50,
                         13: 50,
                         14: 50
-                    }
+                    },
+                    "Level": auto_level,
                 },
                 "plunge": {
-                    "Level": 10,
                     "DMG": {
                         1: 56.83,
                         2: 61.45,
@@ -243,10 +244,10 @@ class Klee(GrpgCharacter):
                         12: 128.2,
                         13: 136.12,
                         14: 144.05
-                    }
+                    },
+                    "Level": auto_level,
                 },
                 "skill": {
-                    "Level": 10,
                     "Jumpy Dumpty DMG": {
                         1: 95.2,
                         2: 102.34,
@@ -310,10 +311,11 @@ class Klee(GrpgCharacter):
                         12: 20,
                         13: 20,
                         14: 20
-                    }
+                    },
+                    "Level": skill_level,
+
                 },
                 "burst": {
-                    "Level": 10,
                     "Sparks 'n' Splash DMG": {
                         1: 42.64,
                         2: 45.84,
@@ -377,7 +379,9 @@ class Klee(GrpgCharacter):
                         12: 60,
                         13: 60,
                         14: 60
-                    }
+                    },
+                    "Level": burst_level,
+
                 }
             }
         }
@@ -389,7 +393,7 @@ class Klee(GrpgCharacter):
     def invoke_auto(self, talent, data, fs):
         
         # set pyro as element. (klee's auto does pyro dmg)
-        fs.element = 'Electro'
+        fs.element = 'Pyro'
 
 
         # include pyro dmg bonus    
@@ -401,7 +405,7 @@ class Klee(GrpgCharacter):
     def invoke_charge(self, talent, data, fs):
 
         # set pyro as element. (klee's charge does pyro dmg)
-        # fs.element = 'Pyro'
+        fs.element = 'Pyro'
 
         # include pyro dmg bonus    
         fs.dmg_post_bonus.equals(

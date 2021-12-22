@@ -2,7 +2,7 @@
 def interpolate_stat(stats_table, level):
     """calculates the stats for intermediate levels not listed in stats table"""
 
-    stats_table = {float(k): v for k, v in stats_table.items()}
+    stats_table = {float(k): float(v) for k, v in stats_table.items()}
     
     
     stat = stats_table.get(level)

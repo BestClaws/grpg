@@ -78,14 +78,14 @@ class StatsManager:
         fb = self.fbuffs
         i = self.inherent
         
-        _base_hp = self.interpolate_stat('Base HP')
-        s['Max HP'].equals(E(_base_hp) * (pb['Max HP'] + 1) + fb['Max HP'])
+        base_hp = self.interpolate_stat('Base HP')
+        s['Max HP'].equals(E(base_hp) * (pb['Max HP'] + 1) + fb['Max HP'])
         
-        _base_atk = self.interpolate_stat('Base ATK') + self.chara.weapon.base_atk
-        s['ATK'].equals((pb['ATK'] + 1) * _base_atk + fb['ATK'])
+        base_atk = self.interpolate_stat('Base ATK') + self.chara.weapon.base_atk
+        s['ATK'].equals((pb['ATK'] + 1) * base_atk + fb['ATK'])
 
-        _base_def = self.interpolate_stat('Base DEF')
-        s['DEF'].equals((pb['DEF'] + 1) * _base_def + fb['DEF'])
+        base_def = self.interpolate_stat('Base DEF')
+        s['DEF'].equals((pb['DEF'] + 1) * base_def + fb['DEF'])
 
         s['Elemental Mastery'].atler(s['Elemental Mastery'] + fb['Elemental Mastery'])
 

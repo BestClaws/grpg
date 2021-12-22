@@ -11,13 +11,17 @@ from ..GrpgCharacter import GrpgCharacter
 
 class Kaeya(GrpgCharacter):
 
-    def __init__(self, level=1):
+    def __init__(self, levels=(90,8,8,8)):
 
         self.name = "Kaeya"
+
+        
+        chara_level, auto_level, skill_level, burst_level = levels
+
         # inherent parameters, not tweakable.
         inherent = {
             "Element": "Cryo",
-            "Level": level,
+            "Level": chara_level,
             "Stats": {
                 "Base HP": {
                     1: 976,
@@ -213,7 +217,7 @@ class Kaeya(GrpgCharacter):
                         ]
 
                     },
-                    "Level": 10
+                    "Level": auto_level
                 },
                 "charge": {
                     "DMG": {
@@ -232,7 +236,7 @@ class Kaeya(GrpgCharacter):
                         13: [138.3, 183.68],
                         14: [148.65, 197.42]
                     },
-                    "Level": 10,
+                    "Level": auto_level,
                     "Stamina Cost": {
                         1: 20,
                         2: 20,
@@ -267,7 +271,7 @@ class Kaeya(GrpgCharacter):
                         13: 153.14,
                         14: 162.06
                     },
-                    "Level": 10
+                    "Level": auto_level
                 },
                 "skill": {
                     "Skill DMG": {
@@ -302,7 +306,7 @@ class Kaeya(GrpgCharacter):
                         13: 6,
                         14: 6
                     },
-                    "Level": 10
+                    "Level": skill_level
                 },
                 "burst": {
                     "Skill DMG": {
@@ -369,7 +373,7 @@ class Kaeya(GrpgCharacter):
                         13: 60,
                         14: 60
                     },
-                    "Level": 10
+                    "Level": burst_level
                 }
             }
         }
@@ -381,7 +385,6 @@ class Kaeya(GrpgCharacter):
     @auto
     def invoke_auto(self, talent, data, fs):
         
-        fs.element = 'Cryo'
 
         # include physical dmg bonus    
         new_exp = fs.talent_dmg * (self.sm.stats['Physical DMG Bonus'] + 1)
